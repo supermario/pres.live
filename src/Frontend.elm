@@ -67,7 +67,7 @@ update msg model =
                     ( model, Cmd.none )
 
                 External url ->
-                    ( model, Nav.load url )
+                    ( model, Browser.Navigation.load url )
 
         UrlChanged url ->
             ( model, Cmd.none )
