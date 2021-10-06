@@ -66,9 +66,7 @@ update msg model =
                     ( model, Cmd.none )
 
                 External url ->
-                    ( model
-                    , Nav.load url
-                    )
+                    ( model, Nav.load url )
 
         UrlChanged url ->
             ( model, Cmd.none )
@@ -137,16 +135,58 @@ update msg model =
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 updateFromBackend msg model =
     case msg of
-        UpdateAdmin record ->
-            Debug.todo ""
+        UpdateAdmin answerData ->
+            case model of
+                IsAdmin currentQuestion _ ->
+                    ( IsAdmin currentQuestion answerData, Cmd.none )
+
+                IsUser _ ->
+                    ( model, Cmd.none )
 
         NextQuestion ->
-            Debug.todo ""
+            case model of
+                IsAdmin currentQuestion adminData ->
+                    ( IsAdmin (nextCurrentQuestion currentQuestion) adminData, Cmd.none )
+
+                IsUser question ->
+                    ( nextQuestion question |> IsUser, Cmd.none )
+
+
+nextCurrentQuestion : CurrentQuestion -> CurrentQuestion
+nextCurrentQuestion currentQuestion =
+    case currentQuestion of
+        HowAreYou_ ->
+            HowExperiencedAreYouWithElm_
+
+        HowExperiencedAreYouWithElm_ ->
+            HowExperiencedAreYouWithProgramming_
+
+        HowExperiencedAreYouWithProgramming_ ->
+            WhatCountryAreYouFrom_
+
+        WhatCountryAreYouFrom_ ->
+            WhatCountryAreYouFrom_
+
+
+nextQuestion : Question -> Question
+nextQuestion currentQuestion =
+    case currentQuestion of
+        HowAreYou _ ->
+            HowExperiencedAreYouWithElm Nothing
+
+        HowExperiencedAreYouWithElm _ ->
+            HowExperiencedAreYouWithProgramming Nothing
+
+        HowExperiencedAreYouWithProgramming _ ->
+            WhatCountryAreYouFrom Nothing
+
+        WhatCountryAreYouFrom _ ->
+            WhatCountryAreYouFrom Nothing
 
 
 view : FrontendModel -> Browser.Document FrontendMsg
 view model =
-    { title = ""
+    { title = "Elm Online Survey!"
     , body =
         [ Element.layout
             []
