@@ -2,6 +2,7 @@ module Types exposing (..)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
+import Countries exposing (Country)
 import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
 import Url exposing (Url)
@@ -44,10 +45,6 @@ type alias BackendModel =
     , whatCountryAreYouFrom : Dict SessionId Country
     , currentQuestion : CurrentQuestion
     }
-
-
-type Country
-    = Country String
 
 
 type FrontendMsg

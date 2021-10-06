@@ -13,7 +13,8 @@
             "elm-community/list-extra": "8.5.1",
             "lamdera/codecs": "1.0.0",
             "lamdera/core": "1.0.0",
-            "mdgriffith/elm-ui": "1.1.8"
+            "mdgriffith/elm-ui": "1.1.8",
+            "supermario/elm-countries": "1.1.1"
         },
         "indirect": {
             "elm/bytes": "1.0.8",

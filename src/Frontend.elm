@@ -2,6 +2,7 @@ module Frontend exposing (..)
 
 import Browser exposing (UrlRequest(..))
 import Browser.Navigation as Nav
+import Countries exposing (Country)
 import Element exposing (Element)
 import Element.Background
 import Element.Border
@@ -181,7 +182,7 @@ view model =
     { title = "Elm Online Survey!"
     , body =
         [ Element.layout
-            []
+            [ Element.padding 16 ]
             (case model of
                 IsAdmin currentQuestion answerData ->
                     Element.column
@@ -246,19 +247,30 @@ countryQuestionTitle =
 
 adminAnswers : (a -> String) -> List a -> List a -> Element msg
 adminAnswers toString possibleAnswers answers_ =
-    List.map
+    List.filterMap
         (\answer ->
             let
                 count =
                     List.count ((==) answer) answers_
             in
-            toString answer
-                ++ " "
-                ++ String.fromInt count
-                |> Element.text
+            if count == 0 then
+                Nothing
+
+            else
+                toString answer
+                    ++ " "
+                    ++ String.fromInt count
+                    |> Element.text
+                    |> Element.el
+                        [ Element.Background.color <| Element.rgb 0.9 0.9 0.9
+                        , Element.Border.width 1
+                        , Element.Border.color <| Element.rgb 0.1 0.1 0.1
+                        , Element.padding 16
+                        ]
+                    |> Just
         )
         possibleAnswers
-        |> Element.row [ Element.spacing 8 ]
+        |> Element.wrappedRow [ Element.spacing 8, Element.centerX ]
 
 
 questionView : Question -> Element FrontendMsg
@@ -287,11 +299,11 @@ questionView question =
 
 countryToString : Country -> String
 countryToString country =
-    Debug.todo ""
+    country.name
 
 
 countryAnswers =
-    []
+    Countries.all
 
 
 experienceLevelAnswers =
@@ -338,7 +350,7 @@ happinessToString howAreYou =
 
 answers : (a -> msg) -> (a -> String) -> List a -> Maybe a -> Element msg
 answers onPress toString options selected =
-    Element.row [ Element.spacing 8, Element.centerX ]
+    Element.wrappedRow [ Element.spacing 8, Element.centerX ]
         (List.map
             (\option ->
                 Element.Input.button
