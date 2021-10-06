@@ -8,7 +8,7 @@ import Url exposing (Url)
 
 
 type FrontendModel
-    = IsAdmin
+    = IsAdmin CurrentQuestion AdminData
     | IsUser Question
 
 
@@ -17,6 +17,13 @@ type Question
     | HowExperiencedAreYouWithElm (Maybe ExperienceLevel)
     | HowExperiencedAreYouWithProgramming (Maybe ExperienceLevel)
     | WhatCountryAreYouFrom (Maybe Country)
+
+
+type CurrentQuestion
+    = HowAreYou_
+    | HowExperiencedAreYouWithElm_
+    | HowExperiencedAreYouWithProgramming_
+    | WhatCountryAreYouFrom_
 
 
 type Happiness
@@ -63,11 +70,14 @@ type BackendMsg
     = NoOpBackendMsg
 
 
+type alias AdminData =
+    { howAreYou : List Happiness
+    , howExperiencedAreYouWithElm : List ExperienceLevel
+    , howExperiencedAreYouWithProgramming : List ExperienceLevel
+    , whatCountryAreYouFrom : List Country
+    }
+
+
 type ToFrontend
-    = UpdateAdmin
-        { howAreYou : List Happiness
-        , howExperiencedAreYouWithElm : List ExperienceLevel
-        , howExperiencedAreYouWithProgramming : List ExperienceLevel
-        , whatCountryAreYouFrom : List Country
-        }
+    = UpdateAdmin AdminData
     | NextQuestion

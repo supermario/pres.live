@@ -7,11 +7,15 @@ import Element.Background
 import Element.Border
 import Element.Font
 import Element.Input
+import Env
 import Html
 import Html.Attributes as Attr
 import Lamdera
+import List.Extra as List
 import Types exposing (..)
 import Url
+import Url.Parser
+import Url.Parser.Query
 
 
 app =
@@ -26,9 +30,29 @@ app =
         }
 
 
+decodeUrl : Url.Parser.Parser (Maybe String -> a) a
+decodeUrl =
+    Url.Parser.query (Url.Parser.Query.string "secret")
+
+
 init : Url.Url -> Nav.Key -> ( FrontendModel, Cmd FrontendMsg )
 init url _ =
-    ( IsUser (HowAreYou Nothing)
+    ( case Url.Parser.parse decodeUrl url of
+        Just (Just secret) ->
+            if secret == Env.secret then
+                IsAdmin
+                    HowAreYou_
+                    { howAreYou = []
+                    , howExperiencedAreYouWithElm = []
+                    , howExperiencedAreYouWithProgramming = []
+                    , whatCountryAreYouFrom = []
+                    }
+
+            else
+                IsUser (HowAreYou Nothing)
+
+        _ ->
+            IsUser (HowAreYou Nothing)
     , Cmd.none
     )
 
@@ -51,7 +75,7 @@ update msg model =
 
         PressedHowAreYou happiness ->
             case model of
-                IsAdmin ->
+                IsAdmin _ _ ->
                     ( model, Cmd.none )
 
                 IsUser question ->
@@ -66,7 +90,7 @@ update msg model =
 
         PressedHowExperiencedAreYouWithElm experienceLevel ->
             case model of
-                IsAdmin ->
+                IsAdmin _ _ ->
                     ( model, Cmd.none )
 
                 IsUser question ->
@@ -81,7 +105,7 @@ update msg model =
 
         PressedHowExperiencedAreYouWithProgramming experienceLevel ->
             case model of
-                IsAdmin ->
+                IsAdmin _ _ ->
                     ( model, Cmd.none )
 
                 IsUser question ->
@@ -96,7 +120,7 @@ update msg model =
 
         PressedWhatCountryAreYouFrom country ->
             case model of
-                IsAdmin ->
+                IsAdmin _ _ ->
                     ( model, Cmd.none )
 
                 IsUser question ->
@@ -127,14 +151,51 @@ view model =
         [ Element.layout
             []
             (case model of
-                IsAdmin ->
-                    Element.text "You are admin"
+                IsAdmin currentQuestion answerData ->
+                    adminQuestionView currentQuestion answerData
 
                 IsUser question ->
                     questionView question
             )
         ]
     }
+
+
+adminQuestionView : CurrentQuestion -> AdminData -> Element FrontendMsg
+adminQuestionView currentQuestion adminData =
+    case currentQuestion of
+        HowAreYou_ ->
+            adminHowAreYou adminData.howAreYou
+
+        HowExperiencedAreYouWithElm_ ->
+            Debug.todo ""
+
+        HowExperiencedAreYouWithProgramming_ ->
+            Debug.todo ""
+
+        WhatCountryAreYouFrom_ ->
+            Debug.todo ""
+
+
+adminHowAreYou : List Happiness -> Element msg
+adminHowAreYou happinesses =
+    Element.column
+        [ Element.spacing 16, Element.centerX, Element.centerY ]
+        [ happinessQuestionTitle
+        , List.map
+            (\answer ->
+                let
+                    count =
+                        List.count ((==) answer) happinesses
+                in
+                happinessToString answer
+                    ++ " "
+                    ++ String.fromInt count
+                    |> Element.text
+            )
+            happinessAnswers
+            |> Element.row [ Element.spacing 8 ]
+        ]
 
 
 questionView : Question -> Element FrontendMsg
@@ -156,13 +217,21 @@ questionView question =
 happinessQuestionView maybeHappiness =
     Element.column
         [ Element.spacing 16, Element.centerX, Element.centerY ]
-        [ Element.paragraph [ Element.Font.center ] [ Element.text "How are you doing?" ]
-        , answers PressedHowAreYou howAreYouToString [ Good, NotGood ] maybeHappiness
+        [ happinessQuestionTitle
+        , answers PressedHowAreYou happinessToString happinessAnswers maybeHappiness
         ]
 
 
-howAreYouToString : Happiness -> String
-howAreYouToString howAreYou =
+happinessQuestionTitle =
+    Element.paragraph [ Element.Font.center ] [ Element.text "How are you doing?" ]
+
+
+happinessAnswers =
+    [ Good, NotGood ]
+
+
+happinessToString : Happiness -> String
+happinessToString howAreYou =
     case howAreYou of
         Good ->
             "Good"
