@@ -57,6 +57,7 @@ type FrontendMsg
     | PressedHowExperiencedAreYouWithElm ExperienceLevel
     | PressedHowExperiencedAreYouWithProgramming ExperienceLevel
     | PressedWhatCountryAreYouFrom Country
+    | AdminPressedNextQuestion
 
 
 type ToBackend

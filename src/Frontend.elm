@@ -131,6 +131,14 @@ update msg model =
                         _ ->
                             ( model, Cmd.none )
 
+        AdminPressedNextQuestion ->
+            case model of
+                IsAdmin _ _ ->
+                    ( model, Lamdera.sendToBackend AdminRequestNextQuestion )
+
+                IsUser _ ->
+                    ( model, Cmd.none )
+
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 updateFromBackend msg model =
@@ -168,23 +176,6 @@ currentQuestionToQuestion currentQuestion =
             WhatCountryAreYouFrom Nothing
 
 
-
---nextQuestion : Question -> Question
---nextQuestion currentQuestion =
---    case currentQuestion of
---        HowAreYou _ ->
---            HowExperiencedAreYouWithElm Nothing
---
---        HowExperiencedAreYouWithElm _ ->
---            HowExperiencedAreYouWithProgramming Nothing
---
---        HowExperiencedAreYouWithProgramming _ ->
---            WhatCountryAreYouFrom Nothing
---
---        WhatCountryAreYouFrom _ ->
---            WhatCountryAreYouFrom Nothing
-
-
 view : FrontendModel -> Browser.Document FrontendMsg
 view model =
     { title = "Elm Online Survey!"
@@ -193,7 +184,19 @@ view model =
             []
             (case model of
                 IsAdmin currentQuestion answerData ->
-                    adminQuestionView currentQuestion answerData
+                    Element.column
+                        [ Element.width Element.fill, Element.height Element.fill ]
+                        [ adminQuestionView currentQuestion answerData
+                        , Element.Input.button
+                            [ Element.padding 8
+                            , Element.Background.color <| Element.rgb 0.9 0.9 0.9
+                            , Element.Border.width 1
+                            , Element.Border.color <| Element.rgb 0.1 0.1 0.1
+                            ]
+                            { onPress = Just AdminPressedNextQuestion
+                            , label = Element.text "Next Question"
+                            }
+                        ]
 
                 IsUser question ->
                     questionView question
@@ -268,17 +271,17 @@ questionView question =
 
         HowExperiencedAreYouWithElm maybeExperienceLevel ->
             questionContainer
-                happinessQuestionTitle
+                howExperiencedAreYouWithElmTitle
                 (answers PressedHowExperiencedAreYouWithElm experienceLevelToString experienceLevelAnswers maybeExperienceLevel)
 
         HowExperiencedAreYouWithProgramming maybeExperienceLevel ->
             questionContainer
-                happinessQuestionTitle
+                howExperiencedAreYouWithProgrammingTitle
                 (answers PressedHowExperiencedAreYouWithProgramming experienceLevelToString experienceLevelAnswers maybeExperienceLevel)
 
         WhatCountryAreYouFrom maybeCountry ->
             questionContainer
-                happinessQuestionTitle
+                countryQuestionTitle
                 (answers PressedWhatCountryAreYouFrom countryToString countryAnswers maybeCountry)
 
 

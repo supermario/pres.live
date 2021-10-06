@@ -77,7 +77,7 @@ updateFromFrontend sessionId _ msg model =
 
         AdminRequestNextQuestion ->
             ( { model | currentQuestion = nextCurrentQuestion model.currentQuestion }
-            , Lamdera.broadcast (SetCurrentQuestion model.currentQuestion)
+            , Lamdera.broadcast (SetCurrentQuestion (nextCurrentQuestion model.currentQuestion))
             )
 
 
