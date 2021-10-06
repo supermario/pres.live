@@ -80,6 +80,17 @@ updateFromFrontend sessionId _ msg model =
             , Lamdera.broadcast (SetCurrentQuestion (nextCurrentQuestion model.currentQuestion))
             )
 
+        AdminRequestReset ->
+            ( { model
+                | howAreYou = Dict.empty
+                , howExperiencedAreYouWithElm = Dict.empty
+                , howExperiencedAreYouWithProgramming = Dict.empty
+                , whatCountryAreYouFrom = Dict.empty
+                , currentQuestion = HowAreYou_
+              }
+            , Lamdera.broadcast (SetCurrentQuestion HowAreYou_)
+            )
+
 
 nextCurrentQuestion : CurrentQuestion -> CurrentQuestion
 nextCurrentQuestion currentQuestion =

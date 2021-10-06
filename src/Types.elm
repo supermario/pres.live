@@ -55,6 +55,7 @@ type FrontendMsg
     | PressedHowExperiencedAreYouWithProgramming ExperienceLevel
     | PressedWhatCountryAreYouFrom Country
     | AdminPressedNextQuestion
+    | AdminPressedReset
 
 
 type ToBackend
@@ -63,6 +64,7 @@ type ToBackend
     | ChoseHowExperiencedAreYouWithProgramming ExperienceLevel
     | ChoseWhatCountryAreYouFrom Country
     | AdminRequestNextQuestion
+    | AdminRequestReset
 
 
 type BackendMsg

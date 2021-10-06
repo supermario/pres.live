@@ -140,6 +140,14 @@ update msg model =
                 IsUser _ ->
                     ( model, Cmd.none )
 
+        AdminPressedReset ->
+            case model of
+                IsAdmin _ _ ->
+                    ( model, Lamdera.sendToBackend AdminRequestReset )
+
+                IsUser _ ->
+                    ( model, Cmd.none )
+
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 updateFromBackend msg model =
@@ -186,7 +194,7 @@ view model =
             (case model of
                 IsAdmin currentQuestion answerData ->
                     Element.column
-                        [ Element.width Element.fill, Element.height Element.fill ]
+                        [ Element.width Element.fill, Element.height Element.fill, Element.spacing 8 ]
                         [ adminQuestionView currentQuestion answerData
                         , Element.Input.button
                             [ Element.padding 8
@@ -196,6 +204,15 @@ view model =
                             ]
                             { onPress = Just AdminPressedNextQuestion
                             , label = Element.text "Next Question"
+                            }
+                        , Element.Input.button
+                            [ Element.padding 8
+                            , Element.Background.color <| Element.rgb 0.9 0.9 0.9
+                            , Element.Border.width 1
+                            , Element.Border.color <| Element.rgb 0.1 0.1 0.1
+                            ]
+                            { onPress = Just AdminPressedReset
+                            , label = Element.text "Reset Questions"
                             }
                         ]
 
