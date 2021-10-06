@@ -1,7 +1,7 @@
 module Frontend exposing (..)
 
 import Browser exposing (UrlRequest(..))
-import Browser.Navigation as Nav
+import Browser.Navigation
 import Countries exposing (Country)
 import Element exposing (Element)
 import Element.Background
@@ -36,8 +36,8 @@ decodeUrl =
     Url.Parser.query (Url.Parser.Query.string "secret")
 
 
-init : Url.Url -> Nav.Key -> ( FrontendModel, Cmd FrontendMsg )
-init url _ =
+init : Url.Url -> Browser.Navigation.Key -> ( FrontendModel, Cmd FrontendMsg )
+init url key =
     ( case Url.Parser.parse decodeUrl url of
         Just (Just secret) ->
             if secret == Env.secret then
@@ -54,7 +54,7 @@ init url _ =
 
         _ ->
             IsUser (HowAreYou Nothing)
-    , Cmd.none
+    , Browser.Navigation.replaceUrl key (Url.toString { url | query = Nothing })
     )
 
 
