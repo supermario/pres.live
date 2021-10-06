@@ -1,13 +1,8 @@
 module Backend exposing (..)
 
 import Dict
-import Html
 import Lamdera exposing (ClientId, SessionId)
 import Types exposing (..)
-
-
-type alias Model =
-    BackendModel
 
 
 app =
@@ -15,26 +10,27 @@ app =
         { init = init
         , update = update
         , updateFromFrontend = updateFromFrontend
-        , subscriptions = \m -> Sub.none
+        , subscriptions = \_ -> Lamdera.onConnect UserConnected
         }
 
 
-init : ( Model, Cmd BackendMsg )
+init : ( BackendModel, Cmd BackendMsg )
 init =
     ( { howAreYou = Dict.empty
       , howExperiencedAreYouWithElm = Dict.empty
       , howExperiencedAreYouWithProgramming = Dict.empty
       , whatCountryAreYouFrom = Dict.empty
+      , currentQuestion = HowAreYou_
       }
     , Cmd.none
     )
 
 
-update : BackendMsg -> Model -> ( Model, Cmd BackendMsg )
+update : BackendMsg -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 update msg model =
     case msg of
-        NoOpBackendMsg ->
-            ( model, Cmd.none )
+        UserConnected _ clientId ->
+            ( model, Lamdera.sendToFrontend clientId (SetCurrentQuestion model.currentQuestion) )
 
 
 convertModelToAdminUpdate model =
@@ -45,7 +41,7 @@ convertModelToAdminUpdate model =
     }
 
 
-updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
+updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 updateFromFrontend sessionId _ msg model =
     case msg of
         ChoseHowAreYou happiness ->
@@ -65,7 +61,10 @@ updateFromFrontend sessionId _ msg model =
         ChoseHowExperiencedAreYouWithProgramming experienceLevel ->
             let
                 newModel =
-                    { model | howExperiencedAreYouWithProgramming = Dict.insert sessionId experienceLevel model.howExperiencedAreYouWithProgramming }
+                    { model
+                        | howExperiencedAreYouWithProgramming =
+                            Dict.insert sessionId experienceLevel model.howExperiencedAreYouWithProgramming
+                    }
             in
             ( newModel, convertModelToAdminUpdate newModel |> UpdateAdmin |> Lamdera.broadcast )
 
@@ -77,4 +76,22 @@ updateFromFrontend sessionId _ msg model =
             ( newModel, convertModelToAdminUpdate newModel |> UpdateAdmin |> Lamdera.broadcast )
 
         AdminRequestNextQuestion ->
-            Debug.todo ""
+            ( { model | currentQuestion = nextCurrentQuestion model.currentQuestion }
+            , Lamdera.broadcast (SetCurrentQuestion model.currentQuestion)
+            )
+
+
+nextCurrentQuestion : CurrentQuestion -> CurrentQuestion
+nextCurrentQuestion currentQuestion =
+    case currentQuestion of
+        HowAreYou_ ->
+            HowExperiencedAreYouWithElm_
+
+        HowExperiencedAreYouWithElm_ ->
+            HowExperiencedAreYouWithProgramming_
+
+        HowExperiencedAreYouWithProgramming_ ->
+            WhatCountryAreYouFrom_
+
+        WhatCountryAreYouFrom_ ->
+            WhatCountryAreYouFrom_

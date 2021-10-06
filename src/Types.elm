@@ -3,7 +3,7 @@ module Types exposing (..)
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
 import Dict exposing (Dict)
-import Lamdera exposing (SessionId)
+import Lamdera exposing (ClientId, SessionId)
 import Url exposing (Url)
 
 
@@ -42,6 +42,7 @@ type alias BackendModel =
     , howExperiencedAreYouWithElm : Dict SessionId ExperienceLevel
     , howExperiencedAreYouWithProgramming : Dict SessionId ExperienceLevel
     , whatCountryAreYouFrom : Dict SessionId Country
+    , currentQuestion : CurrentQuestion
     }
 
 
@@ -67,7 +68,7 @@ type ToBackend
 
 
 type BackendMsg
-    = NoOpBackendMsg
+    = UserConnected SessionId ClientId
 
 
 type alias AdminData =
@@ -80,4 +81,4 @@ type alias AdminData =
 
 type ToFrontend
     = UpdateAdmin AdminData
-    | NextQuestion
+    | SetCurrentQuestion CurrentQuestion

@@ -143,45 +143,46 @@ updateFromBackend msg model =
                 IsUser _ ->
                     ( model, Cmd.none )
 
-        NextQuestion ->
+        SetCurrentQuestion question ->
             case model of
-                IsAdmin currentQuestion adminData ->
-                    ( IsAdmin (nextCurrentQuestion currentQuestion) adminData, Cmd.none )
+                IsAdmin _ adminData ->
+                    ( IsAdmin question adminData, Cmd.none )
 
-                IsUser question ->
-                    ( nextQuestion question |> IsUser, Cmd.none )
+                IsUser _ ->
+                    ( currentQuestionToQuestion question |> IsUser, Cmd.none )
 
 
-nextCurrentQuestion : CurrentQuestion -> CurrentQuestion
-nextCurrentQuestion currentQuestion =
+currentQuestionToQuestion : CurrentQuestion -> Question
+currentQuestionToQuestion currentQuestion =
     case currentQuestion of
         HowAreYou_ ->
-            HowExperiencedAreYouWithElm_
+            HowAreYou Nothing
 
         HowExperiencedAreYouWithElm_ ->
-            HowExperiencedAreYouWithProgramming_
-
-        HowExperiencedAreYouWithProgramming_ ->
-            WhatCountryAreYouFrom_
-
-        WhatCountryAreYouFrom_ ->
-            WhatCountryAreYouFrom_
-
-
-nextQuestion : Question -> Question
-nextQuestion currentQuestion =
-    case currentQuestion of
-        HowAreYou _ ->
             HowExperiencedAreYouWithElm Nothing
 
-        HowExperiencedAreYouWithElm _ ->
+        HowExperiencedAreYouWithProgramming_ ->
             HowExperiencedAreYouWithProgramming Nothing
 
-        HowExperiencedAreYouWithProgramming _ ->
+        WhatCountryAreYouFrom_ ->
             WhatCountryAreYouFrom Nothing
 
-        WhatCountryAreYouFrom _ ->
-            WhatCountryAreYouFrom Nothing
+
+
+--nextQuestion : Question -> Question
+--nextQuestion currentQuestion =
+--    case currentQuestion of
+--        HowAreYou _ ->
+--            HowExperiencedAreYouWithElm Nothing
+--
+--        HowExperiencedAreYouWithElm _ ->
+--            HowExperiencedAreYouWithProgramming Nothing
+--
+--        HowExperiencedAreYouWithProgramming _ ->
+--            WhatCountryAreYouFrom Nothing
+--
+--        WhatCountryAreYouFrom _ ->
+--            WhatCountryAreYouFrom Nothing
 
 
 view : FrontendModel -> Browser.Document FrontendMsg
@@ -205,61 +206,113 @@ adminQuestionView : CurrentQuestion -> AdminData -> Element FrontendMsg
 adminQuestionView currentQuestion adminData =
     case currentQuestion of
         HowAreYou_ ->
-            adminHowAreYou adminData.howAreYou
+            questionContainer
+                happinessQuestionTitle
+                (adminAnswers happinessToString happinessAnswers adminData.howAreYou)
 
         HowExperiencedAreYouWithElm_ ->
-            Debug.todo ""
+            questionContainer
+                howExperiencedAreYouWithElmTitle
+                (adminAnswers experienceLevelToString experienceLevelAnswers adminData.howExperiencedAreYouWithElm)
 
         HowExperiencedAreYouWithProgramming_ ->
-            Debug.todo ""
+            questionContainer
+                howExperiencedAreYouWithProgrammingTitle
+                (adminAnswers experienceLevelToString experienceLevelAnswers adminData.howExperiencedAreYouWithProgramming)
 
         WhatCountryAreYouFrom_ ->
-            Debug.todo ""
+            questionContainer
+                countryQuestionTitle
+                (adminAnswers countryToString countryAnswers adminData.whatCountryAreYouFrom)
 
 
-adminHowAreYou : List Happiness -> Element msg
-adminHowAreYou happinesses =
-    Element.column
-        [ Element.spacing 16, Element.centerX, Element.centerY ]
-        [ happinessQuestionTitle
-        , List.map
-            (\answer ->
-                let
-                    count =
-                        List.count ((==) answer) happinesses
-                in
-                happinessToString answer
-                    ++ " "
-                    ++ String.fromInt count
-                    |> Element.text
-            )
-            happinessAnswers
-            |> Element.row [ Element.spacing 8 ]
-        ]
+howExperiencedAreYouWithElmTitle : Element msg
+howExperiencedAreYouWithElmTitle =
+    Element.paragraph [ Element.Font.center ] [ Element.text "How good are you with Elm?" ]
+
+
+howExperiencedAreYouWithProgrammingTitle : Element msg
+howExperiencedAreYouWithProgrammingTitle =
+    Element.paragraph [ Element.Font.center ] [ Element.text "How good are you at programming in general?" ]
+
+
+countryQuestionTitle : Element msg
+countryQuestionTitle =
+    Element.paragraph [ Element.Font.center ] [ Element.text "What country do you live in?" ]
+
+
+adminAnswers : (a -> String) -> List a -> List a -> Element msg
+adminAnswers toString possibleAnswers answers_ =
+    List.map
+        (\answer ->
+            let
+                count =
+                    List.count ((==) answer) answers_
+            in
+            toString answer
+                ++ " "
+                ++ String.fromInt count
+                |> Element.text
+        )
+        possibleAnswers
+        |> Element.row [ Element.spacing 8 ]
 
 
 questionView : Question -> Element FrontendMsg
 questionView question =
     case question of
         HowAreYou maybeHappiness ->
-            happinessQuestionView maybeHappiness
+            questionContainer
+                happinessQuestionTitle
+                (answers PressedHowAreYou happinessToString happinessAnswers maybeHappiness)
 
         HowExperiencedAreYouWithElm maybeExperienceLevel ->
-            Debug.todo ""
+            questionContainer
+                happinessQuestionTitle
+                (answers PressedHowExperiencedAreYouWithElm experienceLevelToString experienceLevelAnswers maybeExperienceLevel)
 
         HowExperiencedAreYouWithProgramming maybeExperienceLevel ->
-            Debug.todo ""
+            questionContainer
+                happinessQuestionTitle
+                (answers PressedHowExperiencedAreYouWithProgramming experienceLevelToString experienceLevelAnswers maybeExperienceLevel)
 
-        WhatCountryAreYouFrom maybeString ->
-            Debug.todo ""
+        WhatCountryAreYouFrom maybeCountry ->
+            questionContainer
+                happinessQuestionTitle
+                (answers PressedWhatCountryAreYouFrom countryToString countryAnswers maybeCountry)
 
 
-happinessQuestionView maybeHappiness =
+countryToString : Country -> String
+countryToString country =
+    Debug.todo ""
+
+
+countryAnswers =
+    []
+
+
+experienceLevelAnswers =
+    [ Expert, Intermediate, Beginner ]
+
+
+experienceLevelToString : ExperienceLevel -> String
+experienceLevelToString experienceLevel =
+    case experienceLevel of
+        Expert ->
+            "Expert"
+
+        Intermediate ->
+            "Intermediate"
+
+        Beginner ->
+            "Beginner"
+
+
+questionContainer : Element msg -> Element msg -> Element msg
+questionContainer title answers_ =
     Element.column
         [ Element.spacing 16, Element.centerX, Element.centerY ]
-        [ happinessQuestionTitle
-        , answers PressedHowAreYou happinessToString happinessAnswers maybeHappiness
-        ]
+        [ title, answers_ ]
 
 
 happinessQuestionTitle =
