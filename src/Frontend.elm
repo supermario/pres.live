@@ -316,7 +316,7 @@ questionView question =
 
 countryToString : Country -> String
 countryToString country =
-    country.name
+    country.flag ++ " " ++ country.name
 
 
 countryAnswers =
@@ -343,7 +343,7 @@ experienceLevelToString experienceLevel =
 questionContainer : Element msg -> Element msg -> Element msg
 questionContainer title answers_ =
     Element.column
-        [ Element.spacing 16, Element.centerX, Element.centerY ]
+        [ Element.spacing 16, Element.centerX, Element.centerY, Element.width Element.fill ]
         [ title, answers_ ]
 
 
@@ -367,7 +367,7 @@ happinessToString howAreYou =
 
 answers : (a -> msg) -> (a -> String) -> List a -> Maybe a -> Element msg
 answers onPress toString options selected =
-    Element.wrappedRow [ Element.spacing 8, Element.centerX ]
+    Element.wrappedRow [ Element.spacing 8, Element.centerX, Element.width Element.fill ]
         (List.map
             (\option ->
                 Element.Input.button
