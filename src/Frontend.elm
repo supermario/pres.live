@@ -316,7 +316,11 @@ questionView question =
 
 countryToString : Country -> String
 countryToString country =
-    country.flag ++ " " ++ country.name
+    if country.name == "United Kingdom of Great Britain and Northern Ireland" then
+        country.flag ++ " United Kingdon"
+
+    else
+        country.flag ++ " " ++ country.name
 
 
 countryAnswers =
@@ -343,7 +347,7 @@ experienceLevelToString experienceLevel =
 questionContainer : Element msg -> Element msg -> Element msg
 questionContainer title answers_ =
     Element.column
-        [ Element.spacing 16, Element.centerX, Element.centerY, Element.width Element.fill ]
+        [ Element.spacing 16, Element.centerX, Element.centerY ]
         [ title, answers_ ]
 
 
@@ -370,6 +374,10 @@ answers onPress toString options selected =
     Element.wrappedRow [ Element.spacing 8, Element.centerX, Element.width Element.fill ]
         (List.map
             (\option ->
+                let
+                    text =
+                        toString option
+                in
                 Element.Input.button
                     [ Element.Background.color
                         (if selected == Just option then
@@ -378,12 +386,21 @@ answers onPress toString options selected =
                          else
                             Element.rgb 0.9 0.9 0.9
                         )
+                    , Element.height Element.fill
                     , Element.Border.width 1
                     , Element.Border.color <| Element.rgb 0.1 0.1 0.1
                     , Element.padding 16
+                    , if String.length text > 30 then
+                        Element.Font.size 12
+
+                      else if String.length text > 20 then
+                        Element.Font.size 16
+
+                      else
+                        Element.Font.size 20
                     ]
                     { onPress = Just (onPress option)
-                    , label = toString option |> Element.text
+                    , label = Element.text text
                     }
             )
             options
