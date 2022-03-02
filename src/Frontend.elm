@@ -317,7 +317,7 @@ questionView question =
 countryToString : Country -> String
 countryToString country =
     if country.name == "United Kingdom of Great Britain and Northern Ireland" then
-        country.flag ++ " United Kingdon"
+        country.flag ++ " United Kingdom"
 
     else
         country.flag ++ " " ++ country.name
