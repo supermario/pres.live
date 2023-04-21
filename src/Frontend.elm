@@ -325,6 +325,14 @@ countryToString country =
 
 countryAnswers =
     Countries.all
+        |> List.map
+            (\country ->
+                if country.code == "TW" then
+                    { country | name = "Taiwan" }
+
+                else
+                    country
+            )
 
 
 experienceLevelAnswers =
