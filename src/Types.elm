@@ -74,6 +74,7 @@ type FrontendMsg
     | AdminPressedNextQuestion
     | AdminPressedReset
     | TypedComment String
+    | PressedSubmitComment
 
 
 type ToBackend

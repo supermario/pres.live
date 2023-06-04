@@ -12,7 +12,9 @@ import Html
 import Html.Attributes as Attr
 import Lamdera
 import List.Extra as List
+import String.Nonempty
 import Types exposing (..)
+import Ui
 import Url
 import Url.Parser
 import Url.Parser.Query
@@ -156,6 +158,21 @@ update msg model =
                 IsUser userData ->
                     ( IsUser { userData | comment = text }, Cmd.none )
 
+        PressedSubmitComment ->
+            case model of
+                IsAdmin _ _ ->
+                    ( model, Cmd.none )
+
+                IsUser userData ->
+                    case ( userData.commentSubmitStatus, String.Nonempty.fromString userData.comment ) of
+                        ( NotSubmitted, Just comment ) ->
+                            ( IsUser { userData | commentSubmitStatus = Submitting }
+                            , PostCommentRequest comment |> Lamdera.sendToBackend
+                            )
+
+                        _ ->
+                            ( model, Cmd.none )
+
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 updateFromBackend msg model =
@@ -180,7 +197,12 @@ updateFromBackend msg model =
                     ( { userData | question = currentQuestionToQuestion question } |> IsUser, Cmd.none )
 
         PostCommentResponse ->
-            ( model, Cmd.none )
+            case model of
+                IsAdmin _ _ ->
+                    ( model, Cmd.none )
+
+                IsUser userData ->
+                    ( { userData | commentSubmitStatus = NotSubmitted, comment = "" } |> IsUser, Cmd.none )
 
 
 currentQuestionToQuestion : CurrentQuestion -> Question
@@ -210,28 +232,61 @@ view model =
                     Element.column
                         [ Element.width Element.fill, Element.height Element.fill, Element.spacing 8 ]
                         [ adminQuestionView currentQuestion answerData
-                        , Element.Input.button
+                        , Ui.button
                             [ Element.padding 8
                             , Element.Background.color <| Element.rgb 0.9 0.9 0.9
                             , Element.Border.width 1
                             , Element.Border.color <| Element.rgb 0.1 0.1 0.1
                             ]
-                            { onPress = Just AdminPressedNextQuestion
-                            , label = Element.text "Next Question"
-                            }
-                        , Element.Input.button
+                            AdminPressedNextQuestion
+                            (Element.text "Next Question")
+                        , Ui.button
                             [ Element.padding 8
                             , Element.Background.color <| Element.rgb 0.9 0.9 0.9
                             , Element.Border.width 1
                             , Element.Border.color <| Element.rgb 0.1 0.1 0.1
                             ]
-                            { onPress = Just AdminPressedReset
-                            , label = Element.text "Reset Questions"
-                            }
+                            AdminPressedReset
+                            (Element.text "Reset Questions")
                         ]
 
                 IsUser userData ->
-                    questionView userData.question
+                    Element.column
+                        [ Element.width Element.fill, Element.spacing 32 ]
+                        [ questionView userData.question
+                        , Element.column
+                            [ Element.width Element.fill, Element.spacing 16 ]
+                            [ Element.Input.multiline
+                                [ Attr.attribute "data-gramm_editor" "false" |> Element.htmlAttribute
+                                , Attr.attribute "data-enable-grammarly" "false" |> Element.htmlAttribute
+                                ]
+                                { text = userData.comment
+                                , placeholder = Nothing
+                                , onChange = TypedComment
+                                , label =
+                                    Element.Input.labelAbove
+                                        []
+                                        (Element.paragraph [] [ Element.text "Have any questions or comments?" ])
+                                , spellcheck = True
+                                }
+                            , Ui.button
+                                [ Element.Background.color (Element.rgb 0.8 0.9 0.8)
+                                , Element.paddingXY 16 8
+                                , Element.width Element.fill
+                                ]
+                                PressedSubmitComment
+                                ((case userData.commentSubmitStatus of
+                                    NotSubmitted ->
+                                        "Submit question/comment"
+
+                                    Submitting ->
+                                        "Submitting..."
+                                 )
+                                    |> Element.text
+                                    |> Element.el [ Element.centerX ]
+                                )
+                            ]
+                        ]
             )
         ]
     }
@@ -400,7 +455,7 @@ answers onPress toString options selected =
                     text =
                         toString option
                 in
-                Element.Input.button
+                Ui.button
                     [ Element.Background.color
                         (if selected == Just option then
                             Element.rgb 0.7 0.8 0.9
@@ -421,9 +476,8 @@ answers onPress toString options selected =
                       else
                         Element.Font.size 20
                     ]
-                    { onPress = Just (onPress option)
-                    , label = Element.text text
-                    }
+                    (onPress option)
+                    (Element.text text)
             )
             options
         )
