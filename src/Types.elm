@@ -13,8 +13,13 @@ import Url exposing (Url)
 
 
 type FrontendModel
-    = IsAdmin CurrentQuestion AdminData
+    = IsAdmin ViewMode CurrentQuestion AdminData
     | IsUser UserModel
+
+
+type ViewMode
+    = Admin
+    | Present
 
 
 type alias UserModel =
@@ -78,6 +83,7 @@ type FrontendMsg
     | PressedAttributeQuestionAnswer Questions.AttributeQuestionAnswer
     | AdminPressedNextQuestion
     | AdminPressedReset
+    | AdminToggledMode
     | TypedComment String
     | PressedSubmitComment
     | Noop String

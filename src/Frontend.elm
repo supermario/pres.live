@@ -78,7 +78,7 @@ update msg model =
 
         PressedHowAreYou happiness ->
             case model of
-                IsAdmin _ _ ->
+                IsAdmin _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -93,7 +93,7 @@ update msg model =
 
         PressedHowExperiencedAreYouWithElm experienceLevel ->
             case model of
-                IsAdmin _ _ ->
+                IsAdmin _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -108,7 +108,7 @@ update msg model =
 
         PressedHowExperiencedAreYouWithProgramming experienceLevel ->
             case model of
-                IsAdmin _ _ ->
+                IsAdmin _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -123,7 +123,7 @@ update msg model =
 
         PressedWhatCountryAreYouFrom country ->
             case model of
-                IsAdmin _ _ ->
+                IsAdmin _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -138,7 +138,7 @@ update msg model =
 
         PressedAttributeQuestionAnswer attributeQuestionAnswer ->
             case model of
-                IsAdmin _ _ ->
+                IsAdmin _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userModel ->
@@ -153,7 +153,7 @@ update msg model =
 
         AdminPressedNextQuestion ->
             case model of
-                IsAdmin _ _ ->
+                IsAdmin _ _ _ ->
                     ( model, Lamdera.sendToBackend AdminRequestNextQuestion )
 
                 IsUser _ ->
@@ -161,15 +161,34 @@ update msg model =
 
         AdminPressedReset ->
             case model of
-                IsAdmin _ _ ->
+                IsAdmin _ _ _ ->
                     ( model, Lamdera.sendToBackend AdminRequestReset )
+
+                IsUser _ ->
+                    ( model, Cmd.none )
+
+        AdminToggledMode ->
+            case model of
+                IsAdmin mode q d ->
+                    ( IsAdmin
+                        (case mode of
+                            Admin ->
+                                Present
+
+                            Present ->
+                                Admin
+                        )
+                        q
+                        d
+                    , Cmd.none
+                    )
 
                 IsUser _ ->
                     ( model, Cmd.none )
 
         TypedComment text ->
             case model of
-                IsAdmin _ _ ->
+                IsAdmin _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -177,7 +196,7 @@ update msg model =
 
         PressedSubmitComment ->
             case model of
-                IsAdmin _ _ ->
+                IsAdmin _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -198,12 +217,13 @@ updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd Frontend
 updateFromBackend msg model =
     case msg of
         SetAdminMode currentQuestion answerData ->
-            ( IsAdmin currentQuestion answerData, Cmd.none )
+            ( IsAdmin Admin currentQuestion answerData, Cmd.none )
 
         StreamAttributeQuestionAnswer sessionId attributeQuestionAnswer ->
             case model of
-                IsAdmin currentQuestion answerData ->
-                    ( IsAdmin currentQuestion
+                IsAdmin presentMode currentQuestion answerData ->
+                    ( IsAdmin presentMode
+                        currentQuestion
                         { answerData
                             | attributeQuestionAnswers =
                                 answerData.attributeQuestionAnswers
@@ -223,23 +243,23 @@ updateFromBackend msg model =
 
         UpdateAdmin answerData ->
             case model of
-                IsAdmin currentQuestion _ ->
-                    ( IsAdmin currentQuestion answerData, Cmd.none )
+                IsAdmin presentMode currentQuestion _ ->
+                    ( IsAdmin presentMode currentQuestion answerData, Cmd.none )
 
                 IsUser _ ->
                     ( model, Cmd.none )
 
         SetCurrentQuestion question ->
             case model of
-                IsAdmin _ adminData ->
-                    ( IsAdmin question adminData, Cmd.none )
+                IsAdmin mode _ adminData ->
+                    ( IsAdmin mode question adminData, Cmd.none )
 
                 IsUser userData ->
                     ( { userData | question = currentQuestionToQuestion question } |> IsUser, Cmd.none )
 
         PostCommentResponse ->
             case model of
-                IsAdmin _ _ ->
+                IsAdmin _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -267,32 +287,33 @@ currentQuestionToQuestion currentQuestion =
 
 view : FrontendModel -> Browser.Document FrontendMsg
 view model =
-    { title = "Elm Online Survey!"
+    { title = "Hello Lambda Days!"
     , body =
         [ Element.layout
             [ Element.padding 16 ]
             (case model of
-                IsAdmin currentQuestion answerData ->
-                    Element.column
-                        [ Element.width Element.fill, Element.height Element.fill, Element.spacing 8 ]
-                        [ adminQuestionView currentQuestion answerData
-                        , Ui.button
-                            [ Element.padding 8
-                            , Element.Background.color <| Element.rgb 0.9 0.9 0.9
-                            , Element.Border.width 1
-                            , Element.Border.color <| Element.rgb 0.1 0.1 0.1
-                            ]
-                            AdminPressedNextQuestion
-                            (Element.text "Next Question")
-                        , Ui.button
-                            [ Element.padding 8
-                            , Element.Background.color <| Element.rgb 0.9 0.9 0.9
-                            , Element.Border.width 1
-                            , Element.Border.color <| Element.rgb 0.1 0.1 0.1
-                            ]
-                            AdminPressedReset
-                            (Element.text "Reset Questions")
-                        ]
+                IsAdmin presentMode currentQuestion answerData ->
+                    case presentMode of
+                        Admin ->
+                            Element.column
+                                [ Element.width Element.fill, Element.height Element.fill, Element.spacing 8 ]
+                                [ adminQuestionView currentQuestion answerData
+                                , Ui.button_
+                                    AdminPressedNextQuestion
+                                    (Element.text "Next Question")
+                                , Ui.button_
+                                    AdminPressedReset
+                                    (Element.text "Reset Questions")
+                                , Ui.button_
+                                    AdminToggledMode
+                                    (Element.text "Present Mode")
+                                ]
+
+                        Present ->
+                            Element.column
+                                [ Element.width Element.fill, Element.height Element.fill, Element.spacing 8 ]
+                                [ adminQuestionView currentQuestion answerData
+                                ]
 
                 IsUser userData ->
                     Element.column
