@@ -5,6 +5,7 @@ import Browser.Navigation exposing (Key)
 import Countries exposing (Country)
 import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
+import Questions
 import Set exposing (Set)
 import String.Nonempty exposing (NonemptyString)
 import Time
@@ -33,6 +34,7 @@ type Question
     | HowExperiencedAreYouWithElm (Maybe ExperienceLevel)
     | HowExperiencedAreYouWithProgramming (Maybe ExperienceLevel)
     | WhatCountryAreYouFrom (Maybe Country)
+    | AttributeQuestion Questions.AttributeQuestionAnswer
 
 
 type CurrentQuestion
@@ -40,6 +42,7 @@ type CurrentQuestion
     | HowExperiencedAreYouWithElm_
     | HowExperiencedAreYouWithProgramming_
     | WhatCountryAreYouFrom_
+    | AttributeQuestion_ Questions.AttributeType
 
 
 type Happiness
@@ -58,6 +61,7 @@ type alias BackendModel =
     , howExperiencedAreYouWithElm : Dict SessionId ExperienceLevel
     , howExperiencedAreYouWithProgramming : Dict SessionId ExperienceLevel
     , whatCountryAreYouFrom : Dict SessionId Country
+    , attributeQuestionAnswers : Dict SessionId Questions.AttributeQuestionAnswers
     , currentQuestion : CurrentQuestion
     , adminSessions : Set SessionId
     , comments : List Comment
@@ -71,10 +75,12 @@ type FrontendMsg
     | PressedHowExperiencedAreYouWithElm ExperienceLevel
     | PressedHowExperiencedAreYouWithProgramming ExperienceLevel
     | PressedWhatCountryAreYouFrom Country
+    | PressedAttributeQuestionAnswer Questions.AttributeQuestionAnswer
     | AdminPressedNextQuestion
     | AdminPressedReset
     | TypedComment String
     | PressedSubmitComment
+    | Noop String
 
 
 type ToBackend
@@ -82,6 +88,7 @@ type ToBackend
     | ChoseHowExperiencedAreYouWithElm ExperienceLevel
     | ChoseHowExperiencedAreYouWithProgramming ExperienceLevel
     | ChoseWhatCountryAreYouFrom Country
+    | PressedAttributeQuestionAnswer_ Questions.AttributeQuestionAnswer
     | AdminAuth String
     | AdminRequestNextQuestion
     | AdminRequestReset
@@ -98,12 +105,14 @@ type alias AdminData =
     , howExperiencedAreYouWithElm : List ExperienceLevel
     , howExperiencedAreYouWithProgramming : List ExperienceLevel
     , whatCountryAreYouFrom : List Country
+    , attributeQuestionAnswers : Dict SessionId Questions.AttributeQuestionAnswers
     , comments : List Comment
     }
 
 
 type ToFrontend
     = SetAdminMode CurrentQuestion AdminData
+    | StreamAttributeQuestionAnswer SessionId Questions.AttributeQuestionAnswer
     | UpdateAdmin AdminData
     | SetCurrentQuestion CurrentQuestion
     | PostCommentResponse

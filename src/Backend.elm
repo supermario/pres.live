@@ -3,6 +3,8 @@ module Backend exposing (..)
 import Dict
 import Env
 import Lamdera exposing (ClientId, SessionId)
+import List.Extra as List
+import Questions exposing (..)
 import Set
 import Task
 import Time
@@ -25,7 +27,8 @@ init =
       , howExperiencedAreYouWithElm = Dict.empty
       , howExperiencedAreYouWithProgramming = Dict.empty
       , whatCountryAreYouFrom = Dict.empty
-      , currentQuestion = HowAreYou_
+      , attributeQuestionAnswers = Dict.empty
+      , currentQuestion = firstQuestion
       , comments = []
       }
     , Cmd.none
@@ -57,6 +60,7 @@ convertModelToAdminUpdate model =
     , howExperiencedAreYouWithElm = Dict.values model.howExperiencedAreYouWithElm
     , howExperiencedAreYouWithProgramming = Dict.values model.howExperiencedAreYouWithProgramming
     , whatCountryAreYouFrom = Dict.values model.whatCountryAreYouFrom
+    , attributeQuestionAnswers = model.attributeQuestionAnswers
     , comments = model.comments
     }
 
@@ -76,6 +80,15 @@ updateFromFrontendWithTime time sessionId clientId msg model =
                     (\adminSessionId ->
                         Lamdera.sendToFrontend adminSessionId
                             (UpdateAdmin <| convertModelToAdminUpdate newModel)
+                    )
+                |> Cmd.batch
+
+        sendToAdmins msg_ =
+            model.adminSessions
+                |> Set.toList
+                |> List.map
+                    (\adminSessionId ->
+                        Lamdera.sendToFrontend adminSessionId msg_
                     )
                 |> Cmd.batch
     in
@@ -111,18 +124,29 @@ updateFromFrontendWithTime time sessionId clientId msg model =
             in
             ( newModel, updatedAdmins newModel )
 
-        AdminAuth secret ->
-            requiringAdmin model
-                sessionId
-                (\_ ->
-                    if secret == Env.secret then
-                        ( { model | adminSessions = Set.insert sessionId model.adminSessions }
-                        , Lamdera.sendToFrontend sessionId (SetAdminMode model.currentQuestion (convertModelToAdminUpdate model))
-                        )
+        PressedAttributeQuestionAnswer_ attributeQuestionAnswer ->
+            ( { model
+                | attributeQuestionAnswers =
+                    model.attributeQuestionAnswers
+                        |> Dict.update sessionId
+                            (\answersM ->
+                                answersM
+                                    |> Maybe.withDefault Questions.emptyAttributeAnswers
+                                    |> Questions.updateAnswers attributeQuestionAnswer
+                                    |> Just
+                            )
+              }
+            , sendToAdmins (StreamAttributeQuestionAnswer sessionId attributeQuestionAnswer)
+            )
 
-                    else
-                        ( model, Cmd.none )
+        AdminAuth secret ->
+            if secret == Env.secret then
+                ( { model | adminSessions = Set.insert sessionId model.adminSessions }
+                , Lamdera.sendToFrontend sessionId (SetAdminMode model.currentQuestion (convertModelToAdminUpdate model))
                 )
+
+            else
+                ( model, Cmd.none )
 
         AdminRequestNextQuestion ->
             requiringAdmin model
@@ -144,7 +168,7 @@ updateFromFrontendWithTime time sessionId clientId msg model =
                                 , howExperiencedAreYouWithElm = Dict.empty
                                 , howExperiencedAreYouWithProgramming = Dict.empty
                                 , whatCountryAreYouFrom = Dict.empty
-                                , currentQuestion = HowAreYou_
+                                , currentQuestion = firstQuestion
                             }
                     in
                     ( newModel
@@ -169,17 +193,33 @@ requiringAdmin model sessionId fn =
         ( model, Cmd.none )
 
 
+allQuestions =
+    [ AttributeQuestion_ AttendanceReason
+    , AttributeQuestion_ Profession
+    , AttributeQuestion_ Experience
+    , AttributeQuestion_ Scale
+    , AttributeQuestion_ Languages
+    , HowAreYou_
+    , HowExperiencedAreYouWithElm_
+    , HowExperiencedAreYouWithProgramming_
+    , WhatCountryAreYouFrom_
+    ]
+
+
+firstQuestion =
+    allQuestions |> List.head |> Maybe.withDefault HowAreYou_
+
+
 nextCurrentQuestion : CurrentQuestion -> CurrentQuestion
 nextCurrentQuestion currentQuestion =
-    case currentQuestion of
-        HowAreYou_ ->
-            HowExperiencedAreYouWithElm_
+    case List.find (\q -> q == currentQuestion) allQuestions of
+        Just _ ->
+            case List.drop 1 (List.dropWhile (\q -> q /= currentQuestion) allQuestions) of
+                nextQuestion :: _ ->
+                    nextQuestion
 
-        HowExperiencedAreYouWithElm_ ->
-            HowExperiencedAreYouWithProgramming_
+                [] ->
+                    currentQuestion
 
-        HowExperiencedAreYouWithProgramming_ ->
-            WhatCountryAreYouFrom_
-
-        WhatCountryAreYouFrom_ ->
-            WhatCountryAreYouFrom_
+        Nothing ->
+            firstQuestion

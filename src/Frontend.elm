@@ -3,6 +3,7 @@ module Frontend exposing (..)
 import Browser exposing (UrlRequest(..))
 import Browser.Navigation
 import Countries exposing (Country)
+import Dict
 import Element exposing (Element)
 import Element.Background
 import Element.Border
@@ -12,6 +13,7 @@ import Html
 import Html.Attributes as Attr
 import Lamdera
 import List.Extra as List
+import Questions exposing (..)
 import String.Nonempty
 import Types exposing (..)
 import Ui
@@ -134,6 +136,21 @@ update msg model =
                         _ ->
                             ( model, Cmd.none )
 
+        PressedAttributeQuestionAnswer attributeQuestionAnswer ->
+            case model of
+                IsAdmin _ _ ->
+                    ( model, Cmd.none )
+
+                IsUser userModel ->
+                    case userModel.question of
+                        AttributeQuestion _ ->
+                            ( { userModel | question = AttributeQuestion attributeQuestionAnswer } |> IsUser
+                            , Lamdera.sendToBackend (PressedAttributeQuestionAnswer_ attributeQuestionAnswer)
+                            )
+
+                        _ ->
+                            ( model, Cmd.none )
+
         AdminPressedNextQuestion ->
             case model of
                 IsAdmin _ _ ->
@@ -173,12 +190,36 @@ update msg model =
                         _ ->
                             ( model, Cmd.none )
 
+        Noop string ->
+            ( model, Cmd.none )
+
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 updateFromBackend msg model =
     case msg of
         SetAdminMode currentQuestion answerData ->
             ( IsAdmin currentQuestion answerData, Cmd.none )
+
+        StreamAttributeQuestionAnswer sessionId attributeQuestionAnswer ->
+            case model of
+                IsAdmin currentQuestion answerData ->
+                    ( IsAdmin currentQuestion
+                        { answerData
+                            | attributeQuestionAnswers =
+                                answerData.attributeQuestionAnswers
+                                    |> Dict.update sessionId
+                                        (\answersM ->
+                                            answersM
+                                                |> Maybe.withDefault Questions.emptyAttributeAnswers
+                                                |> Questions.updateAnswers attributeQuestionAnswer
+                                                |> Just
+                                        )
+                        }
+                    , Cmd.none
+                    )
+
+                IsUser _ ->
+                    ( model, Cmd.none )
 
         UpdateAdmin answerData ->
             case model of
@@ -205,7 +246,7 @@ updateFromBackend msg model =
                     ( { userData | commentSubmitStatus = NotSubmitted, comment = "" } |> IsUser, Cmd.none )
 
 
-currentQuestionToQuestion : CurrentQuestion -> Question
+currentQuestionToQuestion : CurrentQuestion -> Types.Question
 currentQuestionToQuestion currentQuestion =
     case currentQuestion of
         HowAreYou_ ->
@@ -219,6 +260,9 @@ currentQuestionToQuestion currentQuestion =
 
         WhatCountryAreYouFrom_ ->
             WhatCountryAreYouFrom Nothing
+
+        AttributeQuestion_ attributeType ->
+            AttributeQuestion <| attributeTypeToAttributeQuestionAnswerDefault attributeType
 
 
 view : FrontendModel -> Browser.Document FrontendMsg
@@ -315,6 +359,39 @@ adminQuestionView currentQuestion adminData =
                 countryQuestionTitle
                 (adminAnswers countryToString countryAnswers adminData.whatCountryAreYouFrom)
 
+        AttributeQuestion_ attributeType ->
+            let
+                attributeQuestion =
+                    Questions.attributeQuestion attributeType
+            in
+            List.map
+                (\option ->
+                    let
+                        answers_ =
+                            Questions.attributeQuestionAnswersForAttributeType attributeType adminData.attributeQuestionAnswers
+
+                        count =
+                            List.count ((==) option.text) answers_
+                    in
+                    -- if count == 0 then
+                    --     Nothing
+                    -- else
+                    option.emoji
+                        ++ " "
+                        ++ option.text
+                        ++ " "
+                        ++ String.fromInt count
+                        |> Element.text
+                        |> Element.el
+                            [ Element.Background.color <| Element.rgb 0.9 0.9 0.9
+                            , Element.Border.width 1
+                            , Element.Border.color <| Element.rgb 0.1 0.1 0.1
+                            , Element.padding 16
+                            ]
+                )
+                attributeQuestion.options
+                |> Element.wrappedRow [ Element.spacing 8, Element.centerX ]
+
 
 howExperiencedAreYouWithElmTitle : Element msg
 howExperiencedAreYouWithElmTitle =
@@ -359,9 +436,9 @@ adminAnswers toString possibleAnswers answers_ =
         |> Element.wrappedRow [ Element.spacing 8, Element.centerX ]
 
 
-questionView : Question -> Element FrontendMsg
-questionView question =
-    case question of
+questionView : Types.Question -> Element FrontendMsg
+questionView q =
+    case q of
         HowAreYou maybeHappiness ->
             questionContainer
                 happinessQuestionTitle
@@ -381,6 +458,94 @@ questionView question =
             questionContainer
                 countryQuestionTitle
                 (answers PressedWhatCountryAreYouFrom countryToString countryAnswers maybeCountry)
+
+        AttributeQuestion attributeQuestionAnswer ->
+            let
+                attributeType =
+                    case attributeQuestionAnswer of
+                        AttendanceReasonAnswer _ ->
+                            AttendanceReason
+
+                        ProfessionAnswer _ ->
+                            Profession
+
+                        ExperienceAnswer _ ->
+                            Experience
+
+                        ScaleAnswer _ ->
+                            Scale
+
+                        LanguagesAnswer _ ->
+                            Languages
+
+                attributeQuestion =
+                    Questions.attributeQuestion attributeType
+
+                isSelectedOption : String -> Bool
+                isSelectedOption optionText =
+                    case attributeQuestionAnswer of
+                        AttendanceReasonAnswer answer ->
+                            answer |> Maybe.map (List.map attendanceReasonToString >> List.member optionText) |> Maybe.withDefault False
+
+                        ProfessionAnswer answer ->
+                            answer |> Maybe.map (List.map professionToString >> List.member optionText) |> Maybe.withDefault False
+
+                        ExperienceAnswer answer ->
+                            answer |> Maybe.map (experienceToString >> (==) optionText) |> Maybe.withDefault False
+
+                        ScaleAnswer answer ->
+                            answer |> Maybe.map (scaleToString >> (==) optionText) |> Maybe.withDefault False
+
+                        LanguagesAnswer answer ->
+                            answer |> Maybe.map (List.map languageToString >> List.member optionText) |> Maybe.withDefault False
+
+                onPress optionText =
+                    case Questions.optionTextToAttributeQuestionAnswer attributeQuestionAnswer optionText of
+                        Just attendanceReasonAnswer ->
+                            PressedAttributeQuestionAnswer attendanceReasonAnswer
+
+                        Nothing ->
+                            -- Should be impossible
+                            Noop <| "impossible onPress in questionView: " ++ optionText
+            in
+            Element.column
+                [ Element.spacing 16, Element.centerX, Element.centerY ]
+                [ Element.text attributeQuestion.title
+                , Element.wrappedRow [ Element.spacing 8, Element.centerX, Element.width Element.fill ]
+                    (List.map
+                        (\option ->
+                            let
+                                text =
+                                    option.emoji ++ " " ++ option.text
+                            in
+                            Element.Input.button
+                                [ Element.Background.color
+                                    (if isSelectedOption option.text then
+                                        Element.rgb 0.7 0.8 0.9
+
+                                     else
+                                        Element.rgb 0.9 0.9 0.9
+                                    )
+                                , Element.height Element.fill
+                                , Element.Border.width 1
+                                , Element.Border.color <| Element.rgb 0.1 0.1 0.1
+                                , Element.padding 16
+                                , if String.length text > 30 then
+                                    Element.Font.size 12
+
+                                  else if String.length text > 20 then
+                                    Element.Font.size 16
+
+                                  else
+                                    Element.Font.size 20
+                                ]
+                                { onPress = Just (onPress option.text)
+                                , label = Element.text text
+                                }
+                        )
+                        attributeQuestion.options
+                    )
+                ]
 
 
 countryToString : Country -> String
