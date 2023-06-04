@@ -32,8 +32,17 @@ init =
 update : BackendMsg -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 update msg model =
     case msg of
-        UserConnected _ clientId ->
-            ( model, Lamdera.sendToFrontend clientId (SetCurrentQuestion model.currentQuestion) )
+        UserConnected sessionId clientId ->
+            ( model
+            , Cmd.batch
+                [ Lamdera.sendToFrontend clientId (SetCurrentQuestion model.currentQuestion)
+                , if model.adminSessions |> Set.member sessionId then
+                    Lamdera.sendToFrontend sessionId (SetAdminMode model.currentQuestion (convertModelToAdminUpdate model))
+
+                  else
+                    Cmd.none
+                ]
+            )
 
 
 convertModelToAdminUpdate model =
