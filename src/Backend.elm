@@ -180,8 +180,15 @@ updateFromFrontendWithTime time sessionId clientId msg model =
                 )
 
         PostCommentRequest comment ->
-            ( { model | comments = { text = comment, time = time, sessionId = sessionId } :: model.comments }
-            , Lamdera.sendToFrontend clientId PostCommentResponse
+            let
+                newComment =
+                    { text = comment, time = time, sessionId = sessionId }
+            in
+            ( { model | comments = newComment :: model.comments }
+            , Cmd.batch
+                [ Lamdera.sendToFrontend clientId PostCommentResponse
+                , sendToAdmins (StreamComment newComment)
+                ]
             )
 
 

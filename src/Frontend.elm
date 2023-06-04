@@ -241,6 +241,16 @@ updateFromBackend msg model =
                 IsUser _ ->
                     ( model, Cmd.none )
 
+        StreamComment comment ->
+            case model of
+                IsAdmin presentMode currentQuestion answerData ->
+                    ( IsAdmin presentMode currentQuestion { answerData | comments = comment :: answerData.comments }
+                    , Cmd.none
+                    )
+
+                IsUser _ ->
+                    ( model, Cmd.none )
+
         UpdateAdmin answerData ->
             case model of
                 IsAdmin presentMode currentQuestion _ ->
@@ -307,6 +317,7 @@ view model =
                                 , Ui.button_
                                     AdminToggledMode
                                     (Element.text "Present Mode")
+                                , answerData.comments |> List.take 10 |> List.map commentView |> Element.column [ Element.width Element.fill ]
                                 ]
 
                         Present ->
@@ -355,6 +366,18 @@ view model =
             )
         ]
     }
+
+
+commentView : Comment -> Element FrontendMsg
+commentView comment =
+    Element.column
+        [ Element.width Element.fill, Element.spacing 16 ]
+        [ Element.paragraph []
+            [ comment.text
+                |> String.Nonempty.toString
+                |> Element.text
+            ]
+        ]
 
 
 adminQuestionView : CurrentQuestion -> AdminData -> Element FrontendMsg

@@ -119,6 +119,7 @@ type alias AdminData =
 type ToFrontend
     = SetAdminMode CurrentQuestion AdminData
     | StreamAttributeQuestionAnswer SessionId Questions.AttributeQuestionAnswer
+    | StreamComment Comment
     | UpdateAdmin AdminData
     | SetCurrentQuestion CurrentQuestion
     | PostCommentResponse
