@@ -99,29 +99,56 @@ updateFromFrontend sessionId _ msg model =
             ( newModel, updatedAdmins newModel )
 
         AdminAuth secret ->
-            if secret == Env.secret then
-                ( { model | adminSessions = Set.insert sessionId model.adminSessions }
-                , Lamdera.sendToFrontend sessionId (SetAdminMode model.currentQuestion (convertModelToAdminUpdate model))
+            requiringAdmin model
+                sessionId
+                (\_ ->
+                    if secret == Env.secret then
+                        ( { model | adminSessions = Set.insert sessionId model.adminSessions }
+                        , Lamdera.sendToFrontend sessionId (SetAdminMode model.currentQuestion (convertModelToAdminUpdate model))
+                        )
+
+                    else
+                        ( model, Cmd.none )
                 )
 
-            else
-                ( model, Cmd.none )
-
         AdminRequestNextQuestion ->
-            ( { model | currentQuestion = nextCurrentQuestion model.currentQuestion }
-            , Lamdera.broadcast (SetCurrentQuestion (nextCurrentQuestion model.currentQuestion))
-            )
+            requiringAdmin model
+                sessionId
+                (\_ ->
+                    ( { model | currentQuestion = nextCurrentQuestion model.currentQuestion }
+                    , Lamdera.broadcast (SetCurrentQuestion (nextCurrentQuestion model.currentQuestion))
+                    )
+                )
 
         AdminRequestReset ->
-            ( { model
-                | howAreYou = Dict.empty
-                , howExperiencedAreYouWithElm = Dict.empty
-                , howExperiencedAreYouWithProgramming = Dict.empty
-                , whatCountryAreYouFrom = Dict.empty
-                , currentQuestion = HowAreYou_
-              }
-            , Lamdera.broadcast (SetCurrentQuestion HowAreYou_)
-            )
+            requiringAdmin model
+                sessionId
+                (\_ ->
+                    let
+                        newModel =
+                            { model
+                                | howAreYou = Dict.empty
+                                , howExperiencedAreYouWithElm = Dict.empty
+                                , howExperiencedAreYouWithProgramming = Dict.empty
+                                , whatCountryAreYouFrom = Dict.empty
+                                , currentQuestion = HowAreYou_
+                            }
+                    in
+                    ( newModel
+                    , Cmd.batch
+                        [ Lamdera.broadcast (SetCurrentQuestion newModel.currentQuestion)
+                        , Lamdera.sendToFrontend sessionId (SetAdminMode newModel.currentQuestion (convertModelToAdminUpdate newModel))
+                        ]
+                    )
+                )
+
+
+requiringAdmin model sessionId fn =
+    if model.adminSessions |> Set.member sessionId then
+        fn ()
+
+    else
+        ( model, Cmd.none )
 
 
 nextCurrentQuestion : CurrentQuestion -> CurrentQuestion
