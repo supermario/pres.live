@@ -13,7 +13,19 @@ import Url exposing (Url)
 
 type FrontendModel
     = IsAdmin CurrentQuestion AdminData
-    | IsUser Question
+    | IsUser UserModel
+
+
+type alias UserModel =
+    { question : Question
+    , comment : String
+    , commentSubmitStatus : SubmitStatus
+    }
+
+
+type SubmitStatus
+    = NotSubmitted
+    | Submitting
 
 
 type Question
@@ -61,6 +73,7 @@ type FrontendMsg
     | PressedWhatCountryAreYouFrom Country
     | AdminPressedNextQuestion
     | AdminPressedReset
+    | TypedComment String
 
 
 type ToBackend

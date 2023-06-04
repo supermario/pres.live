@@ -43,7 +43,7 @@ init url key =
     in
     case Url.Parser.parse decodeUrl url of
         Just (Just secret) ->
-            ( IsUser (HowAreYou Nothing)
+            ( IsUser { question = HowAreYou Nothing, comment = "", commentSubmitStatus = NotSubmitted }
             , Cmd.batch
                 [ Lamdera.sendToBackend (AdminAuth secret)
                 , setNewUrl
@@ -51,7 +51,7 @@ init url key =
             )
 
         _ ->
-            ( IsUser (HowAreYou Nothing)
+            ( IsUser { question = HowAreYou Nothing, comment = "", commentSubmitStatus = NotSubmitted }
             , Cmd.batch
                 [ setNewUrl
                 ]
@@ -77,10 +77,10 @@ update msg model =
                 IsAdmin _ _ ->
                     ( model, Cmd.none )
 
-                IsUser question ->
-                    case question of
+                IsUser userData ->
+                    case userData.question of
                         HowAreYou _ ->
-                            ( Just happiness |> HowAreYou |> IsUser
+                            ( { userData | question = Just happiness |> HowAreYou } |> IsUser
                             , Lamdera.sendToBackend (ChoseHowAreYou happiness)
                             )
 
@@ -92,10 +92,10 @@ update msg model =
                 IsAdmin _ _ ->
                     ( model, Cmd.none )
 
-                IsUser question ->
-                    case question of
+                IsUser userData ->
+                    case userData.question of
                         HowExperiencedAreYouWithElm _ ->
-                            ( Just experienceLevel |> HowExperiencedAreYouWithElm |> IsUser
+                            ( { userData | question = Just experienceLevel |> HowExperiencedAreYouWithElm } |> IsUser
                             , Lamdera.sendToBackend (ChoseHowExperiencedAreYouWithElm experienceLevel)
                             )
 
@@ -107,10 +107,10 @@ update msg model =
                 IsAdmin _ _ ->
                     ( model, Cmd.none )
 
-                IsUser question ->
-                    case question of
+                IsUser userData ->
+                    case userData.question of
                         HowExperiencedAreYouWithProgramming _ ->
-                            ( Just experienceLevel |> HowExperiencedAreYouWithProgramming |> IsUser
+                            ( { userData | question = Just experienceLevel |> HowExperiencedAreYouWithProgramming } |> IsUser
                             , Lamdera.sendToBackend (ChoseHowExperiencedAreYouWithProgramming experienceLevel)
                             )
 
@@ -122,10 +122,10 @@ update msg model =
                 IsAdmin _ _ ->
                     ( model, Cmd.none )
 
-                IsUser question ->
-                    case question of
+                IsUser userData ->
+                    case userData.question of
                         WhatCountryAreYouFrom _ ->
-                            ( Just country |> WhatCountryAreYouFrom |> IsUser
+                            ( { userData | question = Just country |> WhatCountryAreYouFrom } |> IsUser
                             , Lamdera.sendToBackend (ChoseWhatCountryAreYouFrom country)
                             )
 
@@ -148,6 +148,14 @@ update msg model =
                 IsUser _ ->
                     ( model, Cmd.none )
 
+        TypedComment text ->
+            case model of
+                IsAdmin _ _ ->
+                    ( model, Cmd.none )
+
+                IsUser userData ->
+                    ( IsUser { userData | comment = text }, Cmd.none )
+
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 updateFromBackend msg model =
@@ -168,8 +176,8 @@ updateFromBackend msg model =
                 IsAdmin _ adminData ->
                     ( IsAdmin question adminData, Cmd.none )
 
-                IsUser _ ->
-                    ( currentQuestionToQuestion question |> IsUser, Cmd.none )
+                IsUser userData ->
+                    ( { userData | question = currentQuestionToQuestion question } |> IsUser, Cmd.none )
 
         PostCommentResponse ->
             ( model, Cmd.none )
@@ -222,8 +230,8 @@ view model =
                             }
                         ]
 
-                IsUser question ->
-                    questionView question
+                IsUser userData ->
+                    questionView userData.question
             )
         ]
     }
