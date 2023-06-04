@@ -374,10 +374,10 @@ happinessToString : Happiness -> String
 happinessToString howAreYou =
     case howAreYou of
         Good ->
-            "Good"
+            "👍"
 
         NotGood ->
-            "Not good"
+            "👎"
 
 
 answers : (a -> msg) -> (a -> String) -> List a -> Maybe a -> Element msg
