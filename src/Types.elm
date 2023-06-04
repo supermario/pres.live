@@ -5,6 +5,7 @@ import Browser.Navigation exposing (Key)
 import Countries exposing (Country)
 import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
+import Set exposing (Set)
 import Url exposing (Url)
 
 
@@ -44,6 +45,7 @@ type alias BackendModel =
     , howExperiencedAreYouWithProgramming : Dict SessionId ExperienceLevel
     , whatCountryAreYouFrom : Dict SessionId Country
     , currentQuestion : CurrentQuestion
+    , adminSessions : Set SessionId
     }
 
 
@@ -63,6 +65,7 @@ type ToBackend
     | ChoseHowExperiencedAreYouWithElm ExperienceLevel
     | ChoseHowExperiencedAreYouWithProgramming ExperienceLevel
     | ChoseWhatCountryAreYouFrom Country
+    | AdminAuth String
     | AdminRequestNextQuestion
     | AdminRequestReset
 
@@ -80,5 +83,6 @@ type alias AdminData =
 
 
 type ToFrontend
-    = UpdateAdmin AdminData
+    = SetAdminMode CurrentQuestion AdminData
+    | UpdateAdmin AdminData
     | SetCurrentQuestion CurrentQuestion

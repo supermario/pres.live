@@ -8,7 +8,6 @@ import Element.Background
 import Element.Border
 import Element.Font
 import Element.Input
-import Env
 import Html
 import Html.Attributes as Attr
 import Lamdera
@@ -38,24 +37,25 @@ decodeUrl =
 
 init : Url.Url -> Browser.Navigation.Key -> ( FrontendModel, Cmd FrontendMsg )
 init url key =
-    ( case Url.Parser.parse decodeUrl url of
+    let
+        setNewUrl =
+            Browser.Navigation.replaceUrl key (Url.toString { url | query = Nothing })
+    in
+    case Url.Parser.parse decodeUrl url of
         Just (Just secret) ->
-            if secret == Env.secret then
-                IsAdmin
-                    HowAreYou_
-                    { howAreYou = []
-                    , howExperiencedAreYouWithElm = []
-                    , howExperiencedAreYouWithProgramming = []
-                    , whatCountryAreYouFrom = []
-                    }
-
-            else
-                IsUser (HowAreYou Nothing)
+            ( IsUser (HowAreYou Nothing)
+            , Cmd.batch
+                [ Lamdera.sendToBackend (AdminAuth secret)
+                , setNewUrl
+                ]
+            )
 
         _ ->
-            IsUser (HowAreYou Nothing)
-    , Browser.Navigation.replaceUrl key (Url.toString { url | query = Nothing })
-    )
+            ( IsUser (HowAreYou Nothing)
+            , Cmd.batch
+                [ setNewUrl
+                ]
+            )
 
 
 update : FrontendMsg -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
@@ -152,6 +152,9 @@ update msg model =
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 updateFromBackend msg model =
     case msg of
+        SetAdminMode currentQuestion answerData ->
+            ( IsAdmin currentQuestion answerData, Cmd.none )
+
         UpdateAdmin answerData ->
             case model of
                 IsAdmin currentQuestion _ ->

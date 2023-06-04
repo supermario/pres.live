@@ -1,7 +1,9 @@
 module Backend exposing (..)
 
 import Dict
+import Env
 import Lamdera exposing (ClientId, SessionId)
+import Set
 import Types exposing (..)
 
 
@@ -16,7 +18,8 @@ app =
 
 init : ( BackendModel, Cmd BackendMsg )
 init =
-    ( { howAreYou = Dict.empty
+    ( { adminSessions = Set.empty
+      , howAreYou = Dict.empty
       , howExperiencedAreYouWithElm = Dict.empty
       , howExperiencedAreYouWithProgramming = Dict.empty
       , whatCountryAreYouFrom = Dict.empty
@@ -43,20 +46,31 @@ convertModelToAdminUpdate model =
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 updateFromFrontend sessionId _ msg model =
+    let
+        updatedAdmins newModel =
+            model.adminSessions
+                |> Set.toList
+                |> List.map
+                    (\adminSessionId ->
+                        Lamdera.sendToFrontend adminSessionId
+                            (UpdateAdmin <| convertModelToAdminUpdate newModel)
+                    )
+                |> Cmd.batch
+    in
     case msg of
         ChoseHowAreYou happiness ->
             let
                 newModel =
                     { model | howAreYou = Dict.insert sessionId happiness model.howAreYou }
             in
-            ( newModel, convertModelToAdminUpdate newModel |> UpdateAdmin |> Lamdera.broadcast )
+            ( newModel, updatedAdmins newModel )
 
         ChoseHowExperiencedAreYouWithElm experienceLevel ->
             let
                 newModel =
                     { model | howExperiencedAreYouWithElm = Dict.insert sessionId experienceLevel model.howExperiencedAreYouWithElm }
             in
-            ( newModel, convertModelToAdminUpdate newModel |> UpdateAdmin |> Lamdera.broadcast )
+            ( newModel, updatedAdmins newModel )
 
         ChoseHowExperiencedAreYouWithProgramming experienceLevel ->
             let
@@ -66,14 +80,23 @@ updateFromFrontend sessionId _ msg model =
                             Dict.insert sessionId experienceLevel model.howExperiencedAreYouWithProgramming
                     }
             in
-            ( newModel, convertModelToAdminUpdate newModel |> UpdateAdmin |> Lamdera.broadcast )
+            ( newModel, updatedAdmins newModel )
 
         ChoseWhatCountryAreYouFrom country ->
             let
                 newModel =
                     { model | whatCountryAreYouFrom = Dict.insert sessionId country model.whatCountryAreYouFrom }
             in
-            ( newModel, convertModelToAdminUpdate newModel |> UpdateAdmin |> Lamdera.broadcast )
+            ( newModel, updatedAdmins newModel )
+
+        AdminAuth secret ->
+            if secret == Env.secret then
+                ( { model | adminSessions = Set.insert sessionId model.adminSessions }
+                , Lamdera.sendToFrontend sessionId (SetAdminMode model.currentQuestion (convertModelToAdminUpdate model))
+                )
+
+            else
+                ( model, Cmd.none )
 
         AdminRequestNextQuestion ->
             ( { model | currentQuestion = nextCurrentQuestion model.currentQuestion }
