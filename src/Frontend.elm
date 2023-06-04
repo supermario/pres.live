@@ -217,7 +217,12 @@ updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd Frontend
 updateFromBackend msg model =
     case msg of
         SetAdminMode currentQuestion answerData ->
-            ( IsAdmin Admin currentQuestion answerData, Cmd.none )
+            case model of
+                IsAdmin presentMode _ _ ->
+                    ( IsAdmin presentMode currentQuestion answerData, Cmd.none )
+
+                _ ->
+                    ( IsAdmin Admin currentQuestion answerData, Cmd.none )
 
         StreamAttributeQuestionAnswer sessionId attributeQuestionAnswer ->
             case model of
@@ -308,16 +313,18 @@ view model =
                             Element.column
                                 [ Element.width Element.fill, Element.height Element.fill, Element.spacing 8 ]
                                 [ adminQuestionView currentQuestion answerData
-                                , Ui.button_
-                                    AdminPressedNextQuestion
-                                    (Element.text "Next Question")
-                                , Ui.button_
-                                    AdminPressedReset
-                                    (Element.text "Reset Questions")
-                                , Ui.button_
-                                    AdminToggledMode
-                                    (Element.text "Present Mode")
-                                , answerData.comments |> List.take 10 |> List.map commentView |> Element.column [ Element.width Element.fill ]
+                                , Element.row [ Element.spacing 8 ]
+                                    [ Ui.button_
+                                        AdminToggledMode
+                                        (Element.text "Present")
+                                    , Ui.button_
+                                        AdminPressedNextQuestion
+                                        (Element.text "Next Question")
+                                    , Ui.button_
+                                        AdminPressedReset
+                                        (Element.text "Reset Questions")
+                                    ]
+                                , answerData.comments |> List.take 20 |> List.map commentView |> Element.column [ Element.width Element.fill ]
                                 ]
 
                         Present ->
