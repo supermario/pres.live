@@ -4,6 +4,8 @@ import Dict
 import Env
 import Lamdera exposing (ClientId, SessionId)
 import Set
+import Task
+import Time
 import Types exposing (..)
 
 
@@ -24,6 +26,7 @@ init =
       , howExperiencedAreYouWithProgramming = Dict.empty
       , whatCountryAreYouFrom = Dict.empty
       , currentQuestion = HowAreYou_
+      , comments = []
       }
     , Cmd.none
     )
@@ -44,17 +47,27 @@ update msg model =
                 ]
             )
 
+        GotTimeForUpdateFromFrontend sessionId clientId toBackend time ->
+            updateFromFrontendWithTime time sessionId clientId toBackend model
 
+
+convertModelToAdminUpdate : BackendModel -> AdminData
 convertModelToAdminUpdate model =
     { howAreYou = Dict.values model.howAreYou
     , howExperiencedAreYouWithElm = Dict.values model.howExperiencedAreYouWithElm
     , howExperiencedAreYouWithProgramming = Dict.values model.howExperiencedAreYouWithProgramming
     , whatCountryAreYouFrom = Dict.values model.whatCountryAreYouFrom
+    , comments = model.comments
     }
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
-updateFromFrontend sessionId _ msg model =
+updateFromFrontend sessionId clientId msg model =
+    ( model, Time.now |> Task.perform (GotTimeForUpdateFromFrontend sessionId clientId msg) )
+
+
+updateFromFrontendWithTime : Time.Posix -> SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
+updateFromFrontendWithTime time sessionId clientId msg model =
     let
         updatedAdmins newModel =
             model.adminSessions
@@ -141,6 +154,11 @@ updateFromFrontend sessionId _ msg model =
                         ]
                     )
                 )
+
+        PostCommentRequest comment ->
+            ( { model | comments = { text = comment, time = time, sessionId = sessionId } :: model.comments }
+            , Lamdera.sendToFrontend clientId PostCommentResponse
+            )
 
 
 requiringAdmin model sessionId fn =

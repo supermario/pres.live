@@ -171,6 +171,9 @@ updateFromBackend msg model =
                 IsUser _ ->
                     ( currentQuestionToQuestion question |> IsUser, Cmd.none )
 
+        PostCommentResponse ->
+            ( model, Cmd.none )
+
 
 currentQuestionToQuestion : CurrentQuestion -> Question
 currentQuestionToQuestion currentQuestion =

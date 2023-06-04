@@ -6,6 +6,8 @@ import Countries exposing (Country)
 import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
 import Set exposing (Set)
+import String.Nonempty exposing (NonemptyString)
+import Time
 import Url exposing (Url)
 
 
@@ -46,6 +48,7 @@ type alias BackendModel =
     , whatCountryAreYouFrom : Dict SessionId Country
     , currentQuestion : CurrentQuestion
     , adminSessions : Set SessionId
+    , comments : List Comment
     }
 
 
@@ -68,10 +71,12 @@ type ToBackend
     | AdminAuth String
     | AdminRequestNextQuestion
     | AdminRequestReset
+    | PostCommentRequest NonemptyString
 
 
 type BackendMsg
     = UserConnected SessionId ClientId
+    | GotTimeForUpdateFromFrontend SessionId ClientId ToBackend Time.Posix
 
 
 type alias AdminData =
@@ -79,6 +84,7 @@ type alias AdminData =
     , howExperiencedAreYouWithElm : List ExperienceLevel
     , howExperiencedAreYouWithProgramming : List ExperienceLevel
     , whatCountryAreYouFrom : List Country
+    , comments : List Comment
     }
 
 
@@ -86,3 +92,11 @@ type ToFrontend
     = SetAdminMode CurrentQuestion AdminData
     | UpdateAdmin AdminData
     | SetCurrentQuestion CurrentQuestion
+    | PostCommentResponse
+
+
+type alias Comment =
+    { sessionId : SessionId
+    , text : NonemptyString
+    , time : Time.Posix
+    }
