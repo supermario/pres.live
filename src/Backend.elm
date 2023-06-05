@@ -16,7 +16,7 @@ app =
         { init = init
         , update = update
         , updateFromFrontend = updateFromFrontend
-        , subscriptions = \_ -> Lamdera.onConnect UserConnected
+        , subscriptions = \_ -> Sub.batch [ Lamdera.onConnect UserConnected, Lamdera.onDisconnect UserDisconnected ]
         }
 
 
@@ -31,6 +31,7 @@ init =
       , currentQuestion = firstQuestion
       , comments = []
       , bannedUsers = Set.empty
+      , sessions = Set.empty
       }
     , Cmd.none
     )
@@ -40,7 +41,14 @@ update : BackendMsg -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 update msg model =
     case msg of
         UserConnected sessionId clientId ->
-            ( model
+            let
+                newSessions =
+                    Set.insert ( sessionId, clientId ) model.sessions
+
+                userCount =
+                    Set.map Tuple.first newSessions |> Set.size
+            in
+            ( { model | sessions = newSessions }
             , Cmd.batch
                 [ Lamdera.sendToFrontend clientId (SetCurrentQuestion model.currentQuestion)
                 , if model.adminSessions |> Set.member sessionId then
@@ -48,8 +56,19 @@ update msg model =
 
                   else
                     Cmd.none
+                , Lamdera.broadcast (UserCountChanged userCount)
                 ]
             )
+
+        UserDisconnected sessionId clientId ->
+            let
+                newSessions =
+                    Set.remove ( sessionId, clientId ) model.sessions
+
+                userCount =
+                    Set.map Tuple.first newSessions |> Set.size
+            in
+            ( { model | sessions = newSessions }, Lamdera.broadcast (UserCountChanged userCount) )
 
         GotTimeForUpdateFromFrontend sessionId clientId toBackend time ->
             updateFromFrontendWithTime time sessionId clientId toBackend model

@@ -6,11 +6,7 @@ import Countries exposing (Country)
 import Dict
 import Element exposing (..)
 import Element.Background as Background
-import Element.Border as Border
 import Element.Font as Font
-import Element.Input as Input
-import Html
-import Html.Attributes as Attr
 import Lamdera
 import List.Extra as List
 import Questions exposing (..)
@@ -48,7 +44,7 @@ init url key =
     in
     case Url.Parser.parse decodeUrl url of
         Just (Just secret) ->
-            ( IsUser { question = HowAreYou Nothing, comment = "", commentSubmitStatus = NotSubmitted }
+            ( IsUser { question = Nothing, comment = "", commentSubmitStatus = NotSubmitted, userCount = 1 }
             , Cmd.batch
                 [ Lamdera.sendToBackend (AdminAuth secret)
                 , setNewUrl
@@ -56,7 +52,7 @@ init url key =
             )
 
         _ ->
-            ( IsUser { question = HowAreYou Nothing, comment = "", commentSubmitStatus = NotSubmitted }
+            ( IsUser { question = Nothing, comment = "", commentSubmitStatus = NotSubmitted, userCount = 1 }
             , Cmd.batch
                 [ setNewUrl
                 ]
@@ -84,8 +80,8 @@ update msg model =
 
                 IsUser userData ->
                     case userData.question of
-                        HowAreYou _ ->
-                            ( { userData | question = Just happiness |> HowAreYou } |> IsUser
+                        Just (HowAreYou _) ->
+                            ( { userData | question = Just happiness |> HowAreYou |> Just } |> IsUser
                             , Lamdera.sendToBackend (ChoseHowAreYou happiness)
                             )
 
@@ -99,8 +95,11 @@ update msg model =
 
                 IsUser userData ->
                     case userData.question of
-                        HowExperiencedAreYouWithElm _ ->
-                            ( { userData | question = Just experienceLevel |> HowExperiencedAreYouWithElm } |> IsUser
+                        Just (HowExperiencedAreYouWithElm _) ->
+                            ( { userData
+                                | question = Just experienceLevel |> HowExperiencedAreYouWithElm |> Just
+                              }
+                                |> IsUser
                             , Lamdera.sendToBackend (ChoseHowExperiencedAreYouWithElm experienceLevel)
                             )
 
@@ -114,8 +113,11 @@ update msg model =
 
                 IsUser userData ->
                     case userData.question of
-                        HowExperiencedAreYouWithProgramming _ ->
-                            ( { userData | question = Just experienceLevel |> HowExperiencedAreYouWithProgramming } |> IsUser
+                        Just (HowExperiencedAreYouWithProgramming _) ->
+                            ( { userData
+                                | question = Just experienceLevel |> HowExperiencedAreYouWithProgramming |> Just
+                              }
+                                |> IsUser
                             , Lamdera.sendToBackend (ChoseHowExperiencedAreYouWithProgramming experienceLevel)
                             )
 
@@ -129,8 +131,8 @@ update msg model =
 
                 IsUser userData ->
                     case userData.question of
-                        WhatCountryAreYouFrom _ ->
-                            ( { userData | question = Just country |> WhatCountryAreYouFrom } |> IsUser
+                        Just (WhatCountryAreYouFrom _) ->
+                            ( { userData | question = Just country |> WhatCountryAreYouFrom |> Just } |> IsUser
                             , Lamdera.sendToBackend (ChoseWhatCountryAreYouFrom country)
                             )
 
@@ -144,8 +146,8 @@ update msg model =
 
                 IsUser userModel ->
                     case userModel.question of
-                        AttributeQuestion _ ->
-                            ( { userModel | question = AttributeQuestion attributeQuestionAnswer } |> IsUser
+                        Just (AttributeQuestion _) ->
+                            ( { userModel | question = AttributeQuestion attributeQuestionAnswer |> Just } |> IsUser
                             , Lamdera.sendToBackend (PressedAttributeQuestionAnswer_ attributeQuestionAnswer)
                             )
 
@@ -292,7 +294,7 @@ updateFromBackend msg model =
                     ( IsAdmin mode question adminData, Cmd.none )
 
                 IsUser userData ->
-                    ( { userData | question = currentQuestionToQuestion question } |> IsUser, Cmd.none )
+                    ( { userData | question = currentPageToQuestion question } |> IsUser, Cmd.none )
 
         PostCommentResponse ->
             case model of
@@ -310,24 +312,35 @@ updateFromBackend msg model =
                 IsUser userData ->
                     ( model, Cmd.none )
 
+        UserCountChanged userCount ->
+            case model of
+                IsAdmin viewMode currentQuestion adminData ->
+                    ( model, Cmd.none )
 
-currentQuestionToQuestion : CurrentQuestion -> Questions.Question
-currentQuestionToQuestion currentQuestion =
+                IsUser userData ->
+                    ( IsUser { userData | userCount = userCount }, Cmd.none )
+
+
+currentPageToQuestion : CurrentQuestion -> Maybe Questions.Question
+currentPageToQuestion currentQuestion =
     case currentQuestion of
+        IntroScreen ->
+            Nothing
+
         HowAreYou_ ->
-            HowAreYou Nothing
+            HowAreYou Nothing |> Just
 
         HowExperiencedAreYouWithElm_ ->
-            HowExperiencedAreYouWithElm Nothing
+            HowExperiencedAreYouWithElm Nothing |> Just
 
         HowExperiencedAreYouWithProgramming_ ->
-            HowExperiencedAreYouWithProgramming Nothing
+            HowExperiencedAreYouWithProgramming Nothing |> Just
 
         WhatCountryAreYouFrom_ ->
-            WhatCountryAreYouFrom Nothing
+            WhatCountryAreYouFrom Nothing |> Just
 
         AttributeQuestion_ attributeType ->
-            AttributeQuestion <| attributeTypeToAttributeQuestionAnswerDefault attributeType
+            attributeTypeToAttributeQuestionAnswerDefault attributeType |> AttributeQuestion |> Just
 
 
 view : FrontendModel -> Browser.Document FrontendMsg
@@ -365,7 +378,7 @@ view model =
                 IsUser userData ->
                     column
                         [ width fill, spacing 32 ]
-                        [ questionView userData.question
+                        [ questionView userData.userCount userData.question
                         , column
                             [ width fill, spacing 16 ]
                             [ Ui.multilineInput "Have any questions or comments?" TypedComment userData.comment
@@ -394,6 +407,9 @@ view model =
 adminQuestionView : CurrentQuestion -> AdminData -> Element FrontendMsg
 adminQuestionView currentQuestion adminData =
     case currentQuestion of
+        IntroScreen ->
+            Element.text "Intro page"
+
         HowAreYou_ ->
             questionContainer
                 happinessQuestionTitle
@@ -489,30 +505,43 @@ adminAnswers toString possibleAnswers answers_ =
         |> wrappedRow [ spacing 8, centerX ]
 
 
-questionView : Questions.Question -> Element FrontendMsg
-questionView q =
+questionView : Int -> Maybe Questions.Question -> Element FrontendMsg
+questionView userCount q =
     case q of
-        HowAreYou maybeHappiness ->
+        Nothing ->
+            column
+                [ spacing 32, centerX ]
+                [ paragraph
+                    [ Font.size 32, Font.heavy, Font.color (rgb255 102 113 208), Font.center ]
+                    [ text "The unbearable weight of glue" ]
+                , row
+                    [ centerX ]
+                    [ el [ Font.size 48, Font.heavy ] (text (String.fromInt userCount ++ " "))
+                    , el [ Font.size 24 ] (text "people have joined")
+                    ]
+                ]
+
+        Just (HowAreYou maybeHappiness) ->
             questionContainer
                 happinessQuestionTitle
                 (answers PressedHowAreYou happinessToString happinessAnswers maybeHappiness)
 
-        HowExperiencedAreYouWithElm maybeExperienceLevel ->
+        Just (HowExperiencedAreYouWithElm maybeExperienceLevel) ->
             questionContainer
                 howExperiencedAreYouWithElmTitle
                 (answers PressedHowExperiencedAreYouWithElm experienceLevelToString experienceLevelAnswers maybeExperienceLevel)
 
-        HowExperiencedAreYouWithProgramming maybeExperienceLevel ->
+        Just (HowExperiencedAreYouWithProgramming maybeExperienceLevel) ->
             questionContainer
                 howExperiencedAreYouWithProgrammingTitle
                 (answers PressedHowExperiencedAreYouWithProgramming experienceLevelToString experienceLevelAnswers maybeExperienceLevel)
 
-        WhatCountryAreYouFrom maybeCountry ->
+        Just (WhatCountryAreYouFrom maybeCountry) ->
             questionContainer
                 countryQuestionTitle
                 (answers PressedWhatCountryAreYouFrom countryToString countryAnswers maybeCountry)
 
-        AttributeQuestion attributeQuestionAnswer ->
+        Just (AttributeQuestion attributeQuestionAnswer) ->
             let
                 attributeType =
                     case attributeQuestionAnswer of

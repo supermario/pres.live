@@ -7,7 +7,8 @@ import List.Extra as List
 
 
 all =
-    [ AttributeQuestion_ AttendanceReason
+    [ IntroScreen
+    , AttributeQuestion_ AttendanceReason
     , AttributeQuestion_ Profession
     , AttributeQuestion_ Experience
     , AttributeQuestion_ Scale
@@ -99,7 +100,8 @@ type Question
 
 
 type CurrentQuestion
-    = HowAreYou_
+    = IntroScreen
+    | HowAreYou_
     | HowExperiencedAreYouWithElm_
     | HowExperiencedAreYouWithProgramming_
     | WhatCountryAreYouFrom_

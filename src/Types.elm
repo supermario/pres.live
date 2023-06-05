@@ -23,9 +23,10 @@ type ViewMode
 
 
 type alias UserModel =
-    { question : Questions.Question
+    { question : Maybe Questions.Question
     , comment : String
     , commentSubmitStatus : SubmitStatus
+    , userCount : Int
     }
 
 
@@ -44,6 +45,7 @@ type alias BackendModel =
     , adminSessions : Set SessionId
     , comments : List Comment
     , bannedUsers : Set SessionId
+    , sessions : Set ( SessionId, ClientId )
     }
 
 
@@ -81,6 +83,7 @@ type ToBackend
 
 type BackendMsg
     = UserConnected SessionId ClientId
+    | UserDisconnected SessionId ClientId
     | GotTimeForUpdateFromFrontend SessionId ClientId ToBackend Time.Posix
 
 
@@ -102,6 +105,7 @@ type ToFrontend
     | SetCurrentQuestion Questions.CurrentQuestion
     | PostCommentResponse
     | RemoveAllBansResponse (List Comment)
+    | UserCountChanged Int
 
 
 type alias Comment =
