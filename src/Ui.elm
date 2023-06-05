@@ -21,6 +21,9 @@ lightMode =
     , blue = fromHex "#C9DBF8"
     , green = fromHex "#CCE6CC"
     , bg2 = fromHex "#E9E9E9"
+    , slide =
+        { purple = fromHex "#6371d7"
+        }
     }
 
 

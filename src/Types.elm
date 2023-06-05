@@ -41,6 +41,7 @@ type alias BackendModel =
     , howExperiencedAreYouWithProgramming : Dict SessionId Questions.ExperienceLevel
     , whatCountryAreYouFrom : Dict SessionId Country
     , attributeQuestionAnswers : Dict SessionId Questions.AttributeQuestionAnswers
+    , normalizedQuestionAnswers : Dict SessionId (Dict String (List String))
     , currentQuestion : Questions.CurrentQuestion
     , adminSessions : Set SessionId
     , comments : List Comment
@@ -57,6 +58,7 @@ type FrontendMsg
     | PressedHowExperiencedAreYouWithProgramming Questions.ExperienceLevel
     | PressedWhatCountryAreYouFrom Country
     | PressedAttributeQuestionAnswer Questions.AttributeQuestionAnswer
+    | PressedNormalisedQuestionAnswer String (List String)
     | AdminPressedNextQuestion
     | AdminPressedReset
     | AdminToggledMode
@@ -73,6 +75,7 @@ type ToBackend
     | ChoseHowExperiencedAreYouWithProgramming Questions.ExperienceLevel
     | ChoseWhatCountryAreYouFrom Country
     | PressedAttributeQuestionAnswer_ Questions.AttributeQuestionAnswer
+    | PressedNormalisedQuestionAnswer_ String (List String)
     | AdminAuth String
     | AdminRequestNextQuestion
     | AdminRequestReset
@@ -93,6 +96,7 @@ type alias AdminData =
     , howExperiencedAreYouWithProgramming : List Questions.ExperienceLevel
     , whatCountryAreYouFrom : List Country
     , attributeQuestionAnswers : Dict SessionId Questions.AttributeQuestionAnswers
+    , normalizedQuestionAnswers : Dict SessionId (Dict String (List String))
     , comments : List Comment
     }
 
@@ -100,6 +104,7 @@ type alias AdminData =
 type ToFrontend
     = SetAdminMode Questions.CurrentQuestion AdminData
     | StreamAttributeQuestionAnswer SessionId Questions.AttributeQuestionAnswer
+    | StreamNormalizedQuestionAnswer SessionId String (List String)
     | StreamComment Comment
     | UpdateAdmin AdminData
     | SetCurrentQuestion Questions.CurrentQuestion

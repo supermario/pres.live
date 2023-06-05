@@ -154,6 +154,21 @@ update msg model =
                         _ ->
                             ( model, Cmd.none )
 
+        PressedNormalisedQuestionAnswer title answers ->
+            case model of
+                IsAdmin _ _ _ ->
+                    ( model, Cmd.none )
+
+                IsUser userModel ->
+                    case userModel.question of
+                        Just (NormalisedQuestionA question _) ->
+                            ( { userModel | question = NormalisedQuestionA question answers |> Just } |> IsUser
+                            , Lamdera.sendToBackend (PressedNormalisedQuestionAnswer_ title answers)
+                            )
+
+                        _ ->
+                            ( model, Cmd.none )
+
         AdminPressedNextQuestion ->
             case model of
                 IsAdmin _ _ _ ->
@@ -270,6 +285,30 @@ updateFromBackend msg model =
                 IsUser _ ->
                     ( model, Cmd.none )
 
+        StreamNormalizedQuestionAnswer sessionId title answers ->
+            case model of
+                IsAdmin presentMode currentQuestion answerData ->
+                    ( IsAdmin presentMode
+                        currentQuestion
+                        { answerData
+                            | normalizedQuestionAnswers =
+                                answerData.normalizedQuestionAnswers
+                                    |> Dict.update sessionId
+                                        (\answersDictM ->
+                                            case answersDictM of
+                                                Just answersDict ->
+                                                    Dict.insert title answers answersDict |> Just
+
+                                                Nothing ->
+                                                    Dict.singleton title answers |> Just
+                                        )
+                        }
+                    , Cmd.none
+                    )
+
+                IsUser _ ->
+                    ( model, Cmd.none )
+
         StreamComment comment ->
             case model of
                 IsAdmin presentMode currentQuestion answerData ->
@@ -341,6 +380,9 @@ currentPageToQuestion currentQuestion =
 
         AttributeQuestion_ attributeType ->
             attributeTypeToAttributeQuestionAnswerDefault attributeType |> AttributeQuestion |> Just
+
+        NormalisedQuestion_ normalisedQuestion ->
+            NormalisedQuestionA normalisedQuestion [] |> Just
 
 
 view : FrontendModel -> Browser.Document FrontendMsg
@@ -430,37 +472,81 @@ adminQuestionView currentQuestion adminData =
                 countryQuestionTitle
                 (adminAnswers countryToString countryAnswers adminData.whatCountryAreYouFrom)
 
+        NormalisedQuestion_ nQuestion ->
+            let
+                allAnswers =
+                    adminData.normalizedQuestionAnswers
+                        |> Dict.values
+                        |> List.filterMap (Dict.get nQuestion.title)
+                        |> List.concat
+
+                answerOptions =
+                    List.map
+                        (\option ->
+                            let
+                                count =
+                                    allAnswers |> List.count ((==) option.emoji)
+                            in
+                            -- if count == 0 then
+                            --     Nothing
+                            -- else
+                            option.emoji
+                                ++ " "
+                                ++ option.text
+                                ++ " "
+                                ++ String.fromInt count
+                                |> text
+                                |> el
+                                    [ Background.color <| rgb 0.9 0.9 0.9
+                                    , Ui.rounded
+                                    , Ui.style.padding
+                                    ]
+                        )
+                        nQuestion.options
+                        |> wrappedRow [ spacing 8, centerX ]
+            in
+            column [ width fill, spacing 20, height fill ]
+                [ row [ Font.bold, Font.size 30 ] [ paragraph [] [ text nQuestion.title ] ]
+                , answerOptions
+                ]
+
         AttributeQuestion_ attributeType ->
             let
                 attributeQuestion =
                     Questions.attributeQuestion attributeType
-            in
-            List.map
-                (\option ->
-                    let
-                        answers_ =
-                            Questions.attributeQuestionAnswersForAttributeType attributeType adminData.attributeQuestionAnswers
 
-                        count =
-                            List.count ((==) option.text) answers_
-                    in
-                    -- if count == 0 then
-                    --     Nothing
-                    -- else
-                    option.emoji
-                        ++ " "
-                        ++ option.text
-                        ++ " "
-                        ++ String.fromInt count
-                        |> text
-                        |> el
-                            [ Background.color <| rgb 0.9 0.9 0.9
-                            , Ui.rounded
-                            , Ui.style.padding
-                            ]
-                )
-                attributeQuestion.options
-                |> wrappedRow [ spacing 8, centerX ]
+                answerOptions =
+                    List.map
+                        (\option ->
+                            let
+                                answers_ =
+                                    Questions.attributeQuestionAnswersForAttributeType attributeType adminData.attributeQuestionAnswers
+
+                                count =
+                                    List.count ((==) option.text) answers_
+                            in
+                            -- if count == 0 then
+                            --     Nothing
+                            -- else
+                            option.emoji
+                                ++ " "
+                                ++ option.text
+                                ++ " "
+                                ++ String.fromInt count
+                                |> text
+                                |> el
+                                    [ Background.color <| rgb 0.9 0.9 0.9
+                                    , Ui.rounded
+                                    , Ui.style.padding
+                                    ]
+                        )
+                        attributeQuestion.options
+                        |> wrappedRow [ spacing 8, centerX ]
+            in
+            column [ width fill, spacing 20, height fill ]
+                [ row [ Font.bold, Font.size 30 ] [ paragraph [] [ text attributeQuestion.title ] ]
+                , answerOptions
+                ]
 
 
 howExperiencedAreYouWithElmTitle : Element msg
@@ -524,22 +610,52 @@ questionView userCount q =
         Just (HowAreYou maybeHappiness) ->
             questionContainer
                 happinessQuestionTitle
-                (answers PressedHowAreYou happinessToString happinessAnswers maybeHappiness)
+                (viewAnswers PressedHowAreYou happinessToString happinessAnswers maybeHappiness)
 
         Just (HowExperiencedAreYouWithElm maybeExperienceLevel) ->
             questionContainer
                 howExperiencedAreYouWithElmTitle
-                (answers PressedHowExperiencedAreYouWithElm experienceLevelToString experienceLevelAnswers maybeExperienceLevel)
+                (viewAnswers PressedHowExperiencedAreYouWithElm experienceLevelToString experienceLevelAnswers maybeExperienceLevel)
 
         Just (HowExperiencedAreYouWithProgramming maybeExperienceLevel) ->
             questionContainer
                 howExperiencedAreYouWithProgrammingTitle
-                (answers PressedHowExperiencedAreYouWithProgramming experienceLevelToString experienceLevelAnswers maybeExperienceLevel)
+                (viewAnswers PressedHowExperiencedAreYouWithProgramming experienceLevelToString experienceLevelAnswers maybeExperienceLevel)
 
         Just (WhatCountryAreYouFrom maybeCountry) ->
             questionContainer
                 countryQuestionTitle
-                (answers PressedWhatCountryAreYouFrom countryToString countryAnswers maybeCountry)
+                (viewAnswers PressedWhatCountryAreYouFrom countryToString countryAnswers maybeCountry)
+
+        Just (NormalisedQuestionA nQuestion userAnswers) ->
+            column
+                [ spacing 16, centerX, centerY ]
+                [ text nQuestion.title
+                , wrappedRow [ spacing 8, centerX, width fill ]
+                    (List.map
+                        (\option ->
+                            let
+                                label =
+                                    option.emoji ++ " " ++ option.text
+                            in
+                            Ui.button
+                                [ Ui.hilightWhen (userAnswers |> List.member option.emoji)
+                                , height fill
+                                , if String.length label > 30 then
+                                    Font.size 12
+
+                                  else if String.length label > 20 then
+                                    Font.size 16
+
+                                  else
+                                    Font.size 20
+                                ]
+                                (PressedNormalisedQuestionAnswer nQuestion.title (userAnswers |> listToggleValue option.emoji))
+                                (text label)
+                        )
+                        nQuestion.options
+                    )
+                ]
 
         Just (AttributeQuestion attributeQuestionAnswer) ->
             let
@@ -683,8 +799,8 @@ happinessToString howAreYou =
             "👎"
 
 
-answers : (a -> msg) -> (a -> String) -> List a -> Maybe a -> Element msg
-answers onPress toString options selected =
+viewAnswers : (a -> msg) -> (a -> String) -> List a -> Maybe a -> Element msg
+viewAnswers onPress toString options selected =
     wrappedRow [ spacing 8, centerX, width fill ]
         (List.map
             (\option ->

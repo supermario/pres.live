@@ -7,17 +7,20 @@ import List.Extra as List
 
 
 all =
-    [ IntroScreen
-    , AttributeQuestion_ AttendanceReason
-    , AttributeQuestion_ Profession
-    , AttributeQuestion_ Experience
-    , AttributeQuestion_ Scale
-    , AttributeQuestion_ Languages
-    , HowAreYou_
-    , HowExperiencedAreYouWithElm_
-    , HowExperiencedAreYouWithProgramming_
-    , WhatCountryAreYouFrom_
-    ]
+    []
+        ++ [ IntroScreen
+           , AttributeQuestion_ AttendanceReason
+           , AttributeQuestion_ Profession
+           , AttributeQuestion_ Experience
+           , AttributeQuestion_ Scale
+           , AttributeQuestion_ Languages
+           ]
+        ++ (openQuestions |> List.map NormalisedQuestion_)
+        ++ [ HowAreYou_
+           , HowExperiencedAreYouWithElm_
+           , HowExperiencedAreYouWithProgramming_
+           , WhatCountryAreYouFrom_
+           ]
 
 
 attributeQuestion : AttributeType -> NormalisedQuestion
@@ -45,7 +48,7 @@ attributeQuestion attributeType =
             }
 
         Scale ->
-            { title = "What is the scale of your projects (users peak)?"
+            { title = "What is the scale of your projects (concurrent users)?"
             , multiselect = False
             , options =
                 allScales |> List.map scaleToOption
@@ -62,22 +65,34 @@ attributeQuestion attributeType =
 openQuestions : List NormalisedQuestion
 openQuestions =
     [ basicQuestion "The systems I work on are getting more complex."
-    , basicQuestion "I feel well equipped to deal with or reduce the complexity."
+    , basicQuestion "I feel well equipped to deal with or reduce complexity."
+    , basicQuestion "Is this a boundary?"
     , basicQuestion "The added complexity is worth it."
     , { title = "Someone on our backend team changed a field name in the API.\nWe’ll find out at:"
       , multiselect = False
       , options =
-            [ { comment = True, emoji = "🔥", text = "Run time" }
+            [ { comment = True, emoji = "💻", text = "Dev time" }
             , { comment = True, emoji = "🤖", text = "Build/Test/CI time" }
-            , { comment = True, emoji = "💻", text = "Dev time" }
+            , { comment = True, emoji = "🔥", text = "Run time" }
             ]
       }
     , { title = "A 3rd party changed a field name in their API. \nWe’ll find out at:"
       , multiselect = False
       , options =
-            [ { comment = True, emoji = "🔥", text = "Run time" }
+            [ { comment = True, emoji = "💻", text = "Dev time" }
             , { comment = True, emoji = "🤖", text = "Build/Test/CI time" }
-            , { comment = True, emoji = "💻", text = "Dev time" }
+            , { comment = True, emoji = "🔥", text = "Run time" }
+            ]
+      }
+    , basicQuestion "Does your code handle HTTP 418 error codes?"
+    , { title = "What percentage of your code is glue code?"
+      , multiselect = False
+      , options =
+            [ { comment = True, emoji = "🟢", text = "<10%" }
+            , { comment = True, emoji = "🟡", text = "<20%" }
+            , { comment = True, emoji = "🟠", text = "<40%" }
+            , { comment = True, emoji = "🔴", text = "<80%" }
+            , { comment = True, emoji = "🔥", text = "Like, all of it" }
             ]
       }
     , { title = "How was it for you?"
@@ -91,12 +106,17 @@ openQuestions =
     ]
 
 
+
+-- @TODO rename this to QuestionAnswer
+
+
 type Question
     = HowAreYou (Maybe Happiness)
     | HowExperiencedAreYouWithElm (Maybe ExperienceLevel)
     | HowExperiencedAreYouWithProgramming (Maybe ExperienceLevel)
     | WhatCountryAreYouFrom (Maybe Country)
     | AttributeQuestion AttributeQuestionAnswer
+    | NormalisedQuestionA NormalisedQuestion (List String)
 
 
 type CurrentQuestion
@@ -106,6 +126,7 @@ type CurrentQuestion
     | HowExperiencedAreYouWithProgramming_
     | WhatCountryAreYouFrom_
     | AttributeQuestion_ AttributeType
+    | NormalisedQuestion_ NormalisedQuestion
 
 
 type Happiness
@@ -130,7 +151,7 @@ basicQuestion title =
 standardYesNoMaybeOptions : List QuestionOption
 standardYesNoMaybeOptions =
     [ { comment = False, emoji = "✅", text = "Yes" }
-    , { comment = False, emoji = "🤔", text = "Maybe" }
+    , { comment = False, emoji = "🤔", text = "Maybe?" }
     , { comment = False, emoji = "🙅🏼\u{200D}♀️", text = "No" }
     ]
 
@@ -141,6 +162,10 @@ type alias QuestionOption =
 
 type alias NormalisedQuestion =
     { multiselect : Bool, title : String, options : List QuestionOption }
+
+
+type alias NormalisedQuestionAnswer =
+    List String
 
 
 type alias AttributeQuestionAnswers =
@@ -365,6 +390,7 @@ type Profession
     | Academic
     | Scientist
     | Student
+    | Management
     | ProfessionOther
 
 
@@ -394,6 +420,9 @@ professionToOption profession =
 
         Student ->
             { comment = False, emoji = "🧑🏾\u{200D}🎓", text = "Student" }
+
+        Management ->
+            { comment = False, emoji = "", text = "Management" }
 
         ProfessionOther ->
             { comment = True, emoji = "❓", text = "Other" }
@@ -490,22 +519,23 @@ type Language
     | Haskell
     | Idris
     | Java
-    | JS
+    | Javascript
     | Kotlin
     | OCaml
+    | PHP
     | Python
     | ReasonML
     | Ruby
     | Rust
     | Scala
     | Swift
-    | TS
+    | Typescript
     | Unison
 
 
 allLanguages : List Language
 allLanguages =
-    [ C, Clojure, CPlusPlus, CSharp, Elixir, Elm, Erlang, FSharp, Go, Haskell, Idris, Java, JS, Kotlin, OCaml, Python, ReasonML, Ruby, Rust, Scala, Swift, TS, Unison ]
+    [ C, Clojure, CPlusPlus, CSharp, Elixir, Elm, Erlang, FSharp, Go, Haskell, Idris, Java, Javascript, Kotlin, OCaml, Python, ReasonML, Ruby, Rust, Scala, Swift, Typescript, Unison ]
 
 
 languageToString : Language -> String
@@ -554,14 +584,17 @@ languageToOption language =
         Java ->
             { comment = False, emoji = "🟠", text = "Java" }
 
-        JS ->
-            { comment = False, emoji = "🟡", text = "JS" }
+        Javascript ->
+            { comment = False, emoji = "🟡", text = "Javascript" }
 
         Kotlin ->
             { comment = False, emoji = "🟠", text = "Kotlin" }
 
         OCaml ->
             { comment = False, emoji = "🟣", text = "OCaml" }
+
+        PHP ->
+            { comment = False, emoji = "🟡", text = "PHP" }
 
         Python ->
             { comment = False, emoji = "🟡", text = "Python" }
@@ -581,8 +614,8 @@ languageToOption language =
         Swift ->
             { comment = False, emoji = "🟠", text = "Swift" }
 
-        TS ->
-            { comment = False, emoji = "🟡", text = "TS" }
+        Typescript ->
+            { comment = False, emoji = "🟡", text = "Typescript" }
 
         Unison ->
             { comment = False, emoji = "🟣", text = "Unison" }

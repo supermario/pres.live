@@ -28,6 +28,7 @@ init =
       , howExperiencedAreYouWithProgramming = Dict.empty
       , whatCountryAreYouFrom = Dict.empty
       , attributeQuestionAnswers = Dict.empty
+      , normalizedQuestionAnswers = Dict.empty
       , currentQuestion = firstQuestion
       , comments = []
       , bannedUsers = Set.empty
@@ -81,6 +82,7 @@ convertModelToAdminUpdate model =
     , howExperiencedAreYouWithProgramming = Dict.values model.howExperiencedAreYouWithProgramming
     , whatCountryAreYouFrom = Dict.values model.whatCountryAreYouFrom
     , attributeQuestionAnswers = model.attributeQuestionAnswers
+    , normalizedQuestionAnswers = model.normalizedQuestionAnswers
     , comments = List.filter (\comment -> not (Set.member comment.sessionId model.bannedUsers)) model.comments
     }
 
@@ -157,6 +159,23 @@ updateFromFrontendWithTime time sessionId clientId msg model =
                             )
               }
             , sendToAdmins (StreamAttributeQuestionAnswer sessionId attributeQuestionAnswer)
+            )
+
+        PressedNormalisedQuestionAnswer_ title answers ->
+            ( { model
+                | normalizedQuestionAnswers =
+                    model.normalizedQuestionAnswers
+                        |> Dict.update sessionId
+                            (\answersDictM ->
+                                case answersDictM of
+                                    Just answersDict ->
+                                        Dict.insert title answers answersDict |> Just
+
+                                    Nothing ->
+                                        Dict.singleton title answers |> Just
+                            )
+              }
+            , sendToAdmins (StreamNormalizedQuestionAnswer sessionId title answers)
             )
 
         AdminAuth secret ->
