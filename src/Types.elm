@@ -70,6 +70,7 @@ type alias BackendModel =
     , currentQuestion : CurrentQuestion
     , adminSessions : Set SessionId
     , comments : List Comment
+    , bannedUsers : Set SessionId
     }
 
 
@@ -86,6 +87,8 @@ type FrontendMsg
     | AdminToggledMode
     | TypedComment String
     | PressedSubmitComment
+    | PressedBanUser SessionId
+    | PressedRemoveAllBans
     | Noop String
 
 
@@ -99,6 +102,8 @@ type ToBackend
     | AdminRequestNextQuestion
     | AdminRequestReset
     | PostCommentRequest NonemptyString
+    | BanUserRequest SessionId
+    | RemoveAllBansRequest
 
 
 type BackendMsg
@@ -123,6 +128,7 @@ type ToFrontend
     | UpdateAdmin AdminData
     | SetCurrentQuestion CurrentQuestion
     | PostCommentResponse
+    | RemoveAllBansResponse (List Comment)
 
 
 type alias Comment =

@@ -30,6 +30,7 @@ init =
       , attributeQuestionAnswers = Dict.empty
       , currentQuestion = firstQuestion
       , comments = []
+      , bannedUsers = Set.empty
       }
     , Cmd.none
     )
@@ -61,7 +62,7 @@ convertModelToAdminUpdate model =
     , howExperiencedAreYouWithProgramming = Dict.values model.howExperiencedAreYouWithProgramming
     , whatCountryAreYouFrom = Dict.values model.whatCountryAreYouFrom
     , attributeQuestionAnswers = model.attributeQuestionAnswers
-    , comments = model.comments
+    , comments = List.filter (\comment -> not (Set.member comment.sessionId model.bannedUsers)) model.comments
     }
 
 
@@ -169,6 +170,7 @@ updateFromFrontendWithTime time sessionId clientId msg model =
                                 , howExperiencedAreYouWithProgramming = Dict.empty
                                 , whatCountryAreYouFrom = Dict.empty
                                 , currentQuestion = firstQuestion
+                                , comments = []
                             }
                     in
                     ( newModel
@@ -184,14 +186,35 @@ updateFromFrontendWithTime time sessionId clientId msg model =
                 newComment =
                     { text = comment, time = time, sessionId = sessionId }
             in
-            ( { model | comments = newComment :: model.comments }
-            , Cmd.batch
-                [ Lamdera.sendToFrontend clientId PostCommentResponse
-                , sendToAdmins (StreamComment newComment)
-                ]
-            )
+            if Set.member sessionId model.bannedUsers then
+                ( model, Lamdera.sendToFrontend clientId PostCommentResponse )
+
+            else
+                ( { model | comments = newComment :: model.comments }
+                , Cmd.batch
+                    [ Lamdera.sendToFrontend clientId PostCommentResponse
+                    , sendToAdmins (StreamComment newComment)
+                    ]
+                )
+
+        BanUserRequest bannedUser ->
+            requiringAdmin
+                model
+                sessionId
+                (\() -> ( { model | bannedUsers = Set.insert bannedUser model.bannedUsers }, Cmd.none ))
+
+        RemoveAllBansRequest ->
+            requiringAdmin
+                model
+                sessionId
+                (\() ->
+                    ( { model | bannedUsers = Set.empty }
+                    , Lamdera.sendToFrontend clientId (RemoveAllBansResponse model.comments)
+                    )
+                )
 
 
+requiringAdmin : BackendModel -> SessionId -> (() -> ( BackendModel, Cmd msg )) -> ( BackendModel, Cmd msg )
 requiringAdmin model sessionId fn =
     if model.adminSessions |> Set.member sessionId then
         fn ()

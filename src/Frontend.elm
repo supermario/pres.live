@@ -210,8 +210,29 @@ update msg model =
                         _ ->
                             ( model, Cmd.none )
 
-        Noop string ->
+        Noop _ ->
             ( model, Cmd.none )
+
+        PressedBanUser sessionId ->
+            case model of
+                IsAdmin viewMode currentQuestion adminData ->
+                    ( IsAdmin
+                        viewMode
+                        currentQuestion
+                        { adminData | comments = List.filter (\comment -> comment.sessionId /= sessionId) adminData.comments }
+                    , Lamdera.sendToBackend (BanUserRequest sessionId)
+                    )
+
+                IsUser _ ->
+                    ( model, Cmd.none )
+
+        PressedRemoveAllBans ->
+            case model of
+                IsAdmin _ _ _ ->
+                    ( model, Lamdera.sendToBackend RemoveAllBansRequest )
+
+                IsUser _ ->
+                    ( model, Cmd.none )
 
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
@@ -280,6 +301,14 @@ updateFromBackend msg model =
 
                 IsUser userData ->
                     ( { userData | commentSubmitStatus = NotSubmitted, comment = "" } |> IsUser, Cmd.none )
+
+        RemoveAllBansResponse comments ->
+            case model of
+                IsAdmin viewMode currentQuestion adminData ->
+                    ( IsAdmin viewMode currentQuestion { adminData | comments = comments }, Cmd.none )
+
+                IsUser userData ->
+                    ( model, Cmd.none )
 
 
 currentQuestionToQuestion : CurrentQuestion -> Types.Question

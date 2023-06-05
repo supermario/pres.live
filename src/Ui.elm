@@ -76,7 +76,7 @@ multilineInput label onChange field =
         , label =
             Input.labelAbove
                 []
-                (paragraph [] [ text "Have any questions or comments?" ])
+                (paragraph [] [ text label ])
         , spellcheck = True
         }
 
