@@ -40,7 +40,7 @@ rounded =
 layout : Element msg -> Html msg
 layout elements =
     Element.layout
-        [ padding 16, Font.family [ Font.typeface "Montserrat" ] ]
+        [ padding 16, Font.family [ Font.typeface "Montserrat", Font.typeface "system-ui" ] ]
         elements
 
 
