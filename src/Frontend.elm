@@ -311,7 +311,7 @@ updateFromBackend msg model =
                     ( model, Cmd.none )
 
 
-currentQuestionToQuestion : CurrentQuestion -> Types.Question
+currentQuestionToQuestion : CurrentQuestion -> Questions.Question
 currentQuestionToQuestion currentQuestion =
     case currentQuestion of
         HowAreYou_ ->
@@ -489,7 +489,7 @@ adminAnswers toString possibleAnswers answers_ =
         |> wrappedRow [ spacing 8, centerX ]
 
 
-questionView : Types.Question -> Element FrontendMsg
+questionView : Questions.Question -> Element FrontendMsg
 questionView q =
     case q of
         HowAreYou maybeHappiness ->

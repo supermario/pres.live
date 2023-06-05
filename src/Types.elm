@@ -13,7 +13,7 @@ import Url exposing (Url)
 
 
 type FrontendModel
-    = IsAdmin ViewMode CurrentQuestion AdminData
+    = IsAdmin ViewMode Questions.CurrentQuestion AdminData
     | IsUser UserModel
 
 
@@ -23,7 +23,7 @@ type ViewMode
 
 
 type alias UserModel =
-    { question : Question
+    { question : Questions.Question
     , comment : String
     , commentSubmitStatus : SubmitStatus
     }
@@ -34,40 +34,13 @@ type SubmitStatus
     | Submitting
 
 
-type Question
-    = HowAreYou (Maybe Happiness)
-    | HowExperiencedAreYouWithElm (Maybe ExperienceLevel)
-    | HowExperiencedAreYouWithProgramming (Maybe ExperienceLevel)
-    | WhatCountryAreYouFrom (Maybe Country)
-    | AttributeQuestion Questions.AttributeQuestionAnswer
-
-
-type CurrentQuestion
-    = HowAreYou_
-    | HowExperiencedAreYouWithElm_
-    | HowExperiencedAreYouWithProgramming_
-    | WhatCountryAreYouFrom_
-    | AttributeQuestion_ Questions.AttributeType
-
-
-type Happiness
-    = Good
-    | NotGood
-
-
-type ExperienceLevel
-    = Expert
-    | Intermediate
-    | Beginner
-
-
 type alias BackendModel =
-    { howAreYou : Dict SessionId Happiness
-    , howExperiencedAreYouWithElm : Dict SessionId ExperienceLevel
-    , howExperiencedAreYouWithProgramming : Dict SessionId ExperienceLevel
+    { howAreYou : Dict SessionId Questions.Happiness
+    , howExperiencedAreYouWithElm : Dict SessionId Questions.ExperienceLevel
+    , howExperiencedAreYouWithProgramming : Dict SessionId Questions.ExperienceLevel
     , whatCountryAreYouFrom : Dict SessionId Country
     , attributeQuestionAnswers : Dict SessionId Questions.AttributeQuestionAnswers
-    , currentQuestion : CurrentQuestion
+    , currentQuestion : Questions.CurrentQuestion
     , adminSessions : Set SessionId
     , comments : List Comment
     , bannedUsers : Set SessionId
@@ -77,9 +50,9 @@ type alias BackendModel =
 type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
-    | PressedHowAreYou Happiness
-    | PressedHowExperiencedAreYouWithElm ExperienceLevel
-    | PressedHowExperiencedAreYouWithProgramming ExperienceLevel
+    | PressedHowAreYou Questions.Happiness
+    | PressedHowExperiencedAreYouWithElm Questions.ExperienceLevel
+    | PressedHowExperiencedAreYouWithProgramming Questions.ExperienceLevel
     | PressedWhatCountryAreYouFrom Country
     | PressedAttributeQuestionAnswer Questions.AttributeQuestionAnswer
     | AdminPressedNextQuestion
@@ -93,9 +66,9 @@ type FrontendMsg
 
 
 type ToBackend
-    = ChoseHowAreYou Happiness
-    | ChoseHowExperiencedAreYouWithElm ExperienceLevel
-    | ChoseHowExperiencedAreYouWithProgramming ExperienceLevel
+    = ChoseHowAreYou Questions.Happiness
+    | ChoseHowExperiencedAreYouWithElm Questions.ExperienceLevel
+    | ChoseHowExperiencedAreYouWithProgramming Questions.ExperienceLevel
     | ChoseWhatCountryAreYouFrom Country
     | PressedAttributeQuestionAnswer_ Questions.AttributeQuestionAnswer
     | AdminAuth String
@@ -112,9 +85,9 @@ type BackendMsg
 
 
 type alias AdminData =
-    { howAreYou : List Happiness
-    , howExperiencedAreYouWithElm : List ExperienceLevel
-    , howExperiencedAreYouWithProgramming : List ExperienceLevel
+    { howAreYou : List Questions.Happiness
+    , howExperiencedAreYouWithElm : List Questions.ExperienceLevel
+    , howExperiencedAreYouWithProgramming : List Questions.ExperienceLevel
     , whatCountryAreYouFrom : List Country
     , attributeQuestionAnswers : Dict SessionId Questions.AttributeQuestionAnswers
     , comments : List Comment
@@ -122,11 +95,11 @@ type alias AdminData =
 
 
 type ToFrontend
-    = SetAdminMode CurrentQuestion AdminData
+    = SetAdminMode Questions.CurrentQuestion AdminData
     | StreamAttributeQuestionAnswer SessionId Questions.AttributeQuestionAnswer
     | StreamComment Comment
     | UpdateAdmin AdminData
-    | SetCurrentQuestion CurrentQuestion
+    | SetCurrentQuestion Questions.CurrentQuestion
     | PostCommentResponse
     | RemoveAllBansResponse (List Comment)
 

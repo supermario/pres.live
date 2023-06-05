@@ -223,28 +223,15 @@ requiringAdmin model sessionId fn =
         ( model, Cmd.none )
 
 
-allQuestions =
-    [ AttributeQuestion_ AttendanceReason
-    , AttributeQuestion_ Profession
-    , AttributeQuestion_ Experience
-    , AttributeQuestion_ Scale
-    , AttributeQuestion_ Languages
-    , HowAreYou_
-    , HowExperiencedAreYouWithElm_
-    , HowExperiencedAreYouWithProgramming_
-    , WhatCountryAreYouFrom_
-    ]
-
-
 firstQuestion =
-    allQuestions |> List.head |> Maybe.withDefault HowAreYou_
+    Questions.all |> List.head |> Maybe.withDefault HowAreYou_
 
 
 nextCurrentQuestion : CurrentQuestion -> CurrentQuestion
 nextCurrentQuestion currentQuestion =
-    case List.find (\q -> q == currentQuestion) allQuestions of
+    case List.find (\q -> q == currentQuestion) Questions.all of
         Just _ ->
-            case List.drop 1 (List.dropWhile (\q -> q /= currentQuestion) allQuestions) of
+            case List.drop 1 (List.dropWhile (\q -> q /= currentQuestion) Questions.all) of
                 nextQuestion :: _ ->
                     nextQuestion
 

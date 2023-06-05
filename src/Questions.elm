@@ -1,11 +1,25 @@
 module Questions exposing (..)
 
+import Countries exposing (Country)
 import Dict exposing (Dict)
 import Lamdera
 import List.Extra as List
 
 
-attributeQuestion : AttributeType -> Question
+all =
+    [ AttributeQuestion_ AttendanceReason
+    , AttributeQuestion_ Profession
+    , AttributeQuestion_ Experience
+    , AttributeQuestion_ Scale
+    , AttributeQuestion_ Languages
+    , HowAreYou_
+    , HowExperiencedAreYouWithElm_
+    , HowExperiencedAreYouWithProgramming_
+    , WhatCountryAreYouFrom_
+    ]
+
+
+attributeQuestion : AttributeType -> NormalisedQuestion
 attributeQuestion attributeType =
     case attributeType of
         AttendanceReason ->
@@ -30,7 +44,7 @@ attributeQuestion attributeType =
             }
 
         Scale ->
-            { title = "What is the scale of your Elm project?"
+            { title = "What is the scale of your projects (users peak)?"
             , multiselect = False
             , options =
                 allScales |> List.map scaleToOption
@@ -44,24 +58,78 @@ attributeQuestion attributeType =
             }
 
 
-openQuestions : List Question
+openQuestions : List NormalisedQuestion
 openQuestions =
-    [ { title = "The systems I work on are getting more complex."
+    [ basicQuestion "The systems I work on are getting more complex."
+    , basicQuestion "I feel well equipped to deal with or reduce the complexity."
+    , basicQuestion "The added complexity is worth it."
+    , { title = "Someone on our backend team changed a field name in the API.\nWe’ll find out at:"
       , multiselect = False
       , options =
-            [ { comment = False, emoji = "✅", text = "Absolutely" }
-            , { comment = False, emoji = "🤷", text = "Not sure" }
-            , { comment = False, emoji = "🙅🏼\u{200D}♀️", text = "Definitely not" }
+            [ { comment = True, emoji = "🔥", text = "Run time" }
+            , { comment = True, emoji = "🤖", text = "Build/Test/CI time" }
+            , { comment = True, emoji = "💻", text = "Dev time" }
             ]
       }
-    , { title = "I feel well equipped to deal with or reduce the complexity."
+    , { title = "A 3rd party changed a field name in their API. \nWe’ll find out at:"
       , multiselect = False
       , options =
-            [ { comment = False, emoji = "✅", text = "Absolutely" }
-            , { comment = False, emoji = "🤷", text = "Not sure" }
-            , { comment = False, emoji = "🙅🏼\u{200D}♀️", text = "Definitely not" }
+            [ { comment = True, emoji = "🔥", text = "Run time" }
+            , { comment = True, emoji = "🤖", text = "Build/Test/CI time" }
+            , { comment = True, emoji = "💻", text = "Dev time" }
             ]
       }
+    , { title = "How was it for you?"
+      , multiselect = False
+      , options =
+            [ { comment = True, emoji = "🤩", text = "Great" }
+            , { comment = True, emoji = "🤷🏼\u{200D}♀️", text = "Alright" }
+            , { comment = True, emoji = "🙅🏿", text = "Bad" }
+            ]
+      }
+    ]
+
+
+type Question
+    = HowAreYou (Maybe Happiness)
+    | HowExperiencedAreYouWithElm (Maybe ExperienceLevel)
+    | HowExperiencedAreYouWithProgramming (Maybe ExperienceLevel)
+    | WhatCountryAreYouFrom (Maybe Country)
+    | AttributeQuestion AttributeQuestionAnswer
+
+
+type CurrentQuestion
+    = HowAreYou_
+    | HowExperiencedAreYouWithElm_
+    | HowExperiencedAreYouWithProgramming_
+    | WhatCountryAreYouFrom_
+    | AttributeQuestion_ AttributeType
+
+
+type Happiness
+    = Good
+    | NotGood
+
+
+type ExperienceLevel
+    = Expert
+    | Intermediate
+    | Beginner
+
+
+basicQuestion : String -> NormalisedQuestion
+basicQuestion title =
+    { title = title
+    , multiselect = False
+    , options = standardYesNoMaybeOptions
+    }
+
+
+standardYesNoMaybeOptions : List QuestionOption
+standardYesNoMaybeOptions =
+    [ { comment = False, emoji = "✅", text = "Yes" }
+    , { comment = False, emoji = "🤔", text = "Maybe" }
+    , { comment = False, emoji = "🙅🏼\u{200D}♀️", text = "No" }
     ]
 
 
@@ -69,7 +137,7 @@ type alias QuestionOption =
     { comment : Bool, emoji : String, text : String }
 
 
-type alias Question =
+type alias NormalisedQuestion =
     { multiselect : Bool, title : String, options : List QuestionOption }
 
 
