@@ -4,11 +4,11 @@ import Browser exposing (UrlRequest(..))
 import Browser.Navigation
 import Countries exposing (Country)
 import Dict
-import Element exposing (Element)
-import Element.Background
-import Element.Border
-import Element.Font
-import Element.Input
+import Element exposing (..)
+import Element.Background as Background
+import Element.Border as Border
+import Element.Font as Font
+import Element.Input as Input
 import Html
 import Html.Attributes as Attr
 import Lamdera
@@ -20,6 +20,7 @@ import Ui
 import Url
 import Url.Parser
 import Url.Parser.Query
+import View.Comments
 
 
 app =
@@ -304,58 +305,44 @@ view : FrontendModel -> Browser.Document FrontendMsg
 view model =
     { title = "Hello Lambda Days!"
     , body =
-        [ Element.layout
-            [ Element.padding 16 ]
+        [ Ui.layout
             (case model of
                 IsAdmin presentMode currentQuestion answerData ->
                     case presentMode of
                         Admin ->
-                            Element.column
-                                [ Element.width Element.fill, Element.height Element.fill, Element.spacing 8 ]
+                            column
+                                [ width fill, height fill, spacing 20 ]
                                 [ adminQuestionView currentQuestion answerData
-                                , Element.row [ Element.spacing 8 ]
-                                    [ Ui.button_
+                                , row [ spacing 8 ]
+                                    [ Ui.button []
                                         AdminToggledMode
-                                        (Element.text "Present")
-                                    , Ui.button_
+                                        (text "Present")
+                                    , Ui.button []
                                         AdminPressedNextQuestion
-                                        (Element.text "Next Question")
-                                    , Ui.button_
+                                        (text "Next Question")
+                                    , Ui.button []
                                         AdminPressedReset
-                                        (Element.text "Reset Questions")
+                                        (text "Reset Questions")
                                     ]
-                                , answerData.comments |> List.take 20 |> List.map commentView |> Element.column [ Element.width Element.fill ]
+                                , View.Comments.adminView answerData.comments
                                 ]
 
                         Present ->
-                            Element.column
-                                [ Element.width Element.fill, Element.height Element.fill, Element.spacing 8 ]
+                            column
+                                [ width fill, height fill, spacing 8 ]
                                 [ adminQuestionView currentQuestion answerData
                                 ]
 
                 IsUser userData ->
-                    Element.column
-                        [ Element.width Element.fill, Element.spacing 32 ]
+                    column
+                        [ width fill, spacing 32 ]
                         [ questionView userData.question
-                        , Element.column
-                            [ Element.width Element.fill, Element.spacing 16 ]
-                            [ Element.Input.multiline
-                                [ Attr.attribute "data-gramm_editor" "false" |> Element.htmlAttribute
-                                , Attr.attribute "data-enable-grammarly" "false" |> Element.htmlAttribute
-                                ]
-                                { text = userData.comment
-                                , placeholder = Nothing
-                                , onChange = TypedComment
-                                , label =
-                                    Element.Input.labelAbove
-                                        []
-                                        (Element.paragraph [] [ Element.text "Have any questions or comments?" ])
-                                , spellcheck = True
-                                }
+                        , column
+                            [ width fill, spacing 16 ]
+                            [ Ui.multilineInput "Have any questions or comments?" TypedComment userData.comment
                             , Ui.button
-                                [ Element.Background.color (Element.rgb 0.8 0.9 0.8)
-                                , Element.paddingXY 16 8
-                                , Element.width Element.fill
+                                [ Background.color Ui.colors.green
+                                , width fill
                                 ]
                                 PressedSubmitComment
                                 ((case userData.commentSubmitStatus of
@@ -365,26 +352,14 @@ view model =
                                     Submitting ->
                                         "Submitting..."
                                  )
-                                    |> Element.text
-                                    |> Element.el [ Element.centerX ]
+                                    |> text
+                                    |> el [ centerX ]
                                 )
                             ]
                         ]
             )
         ]
     }
-
-
-commentView : Comment -> Element FrontendMsg
-commentView comment =
-    Element.column
-        [ Element.width Element.fill, Element.spacing 16 ]
-        [ Element.paragraph []
-            [ comment.text
-                |> String.Nonempty.toString
-                |> Element.text
-            ]
-        ]
 
 
 adminQuestionView : CurrentQuestion -> AdminData -> Element FrontendMsg
@@ -432,31 +407,30 @@ adminQuestionView currentQuestion adminData =
                         ++ option.text
                         ++ " "
                         ++ String.fromInt count
-                        |> Element.text
-                        |> Element.el
-                            [ Element.Background.color <| Element.rgb 0.9 0.9 0.9
-                            , Element.Border.width 1
-                            , Element.Border.color <| Element.rgb 0.1 0.1 0.1
-                            , Element.padding 16
+                        |> text
+                        |> el
+                            [ Background.color <| rgb 0.9 0.9 0.9
+                            , Ui.rounded
+                            , Ui.style.padding
                             ]
                 )
                 attributeQuestion.options
-                |> Element.wrappedRow [ Element.spacing 8, Element.centerX ]
+                |> wrappedRow [ spacing 8, centerX ]
 
 
 howExperiencedAreYouWithElmTitle : Element msg
 howExperiencedAreYouWithElmTitle =
-    Element.paragraph [ Element.Font.center ] [ Element.text "How good are you with Elm?" ]
+    paragraph [ Font.center ] [ text "How good are you with Elm?" ]
 
 
 howExperiencedAreYouWithProgrammingTitle : Element msg
 howExperiencedAreYouWithProgrammingTitle =
-    Element.paragraph [ Element.Font.center ] [ Element.text "How good are you at programming in general?" ]
+    paragraph [ Font.center ] [ text "How good are you at programming in general?" ]
 
 
 countryQuestionTitle : Element msg
 countryQuestionTitle =
-    Element.paragraph [ Element.Font.center ] [ Element.text "What country do you live in?" ]
+    paragraph [ Font.center ] [ text "What country do you live in?" ]
 
 
 adminAnswers : (a -> String) -> List a -> List a -> Element msg
@@ -474,17 +448,16 @@ adminAnswers toString possibleAnswers answers_ =
                 toString answer
                     ++ " "
                     ++ String.fromInt count
-                    |> Element.text
-                    |> Element.el
-                        [ Element.Background.color <| Element.rgb 0.9 0.9 0.9
-                        , Element.Border.width 1
-                        , Element.Border.color <| Element.rgb 0.1 0.1 0.1
-                        , Element.padding 16
+                    |> text
+                    |> el
+                        [ Background.color <| Ui.colors.bg2
+                        , Ui.rounded
+                        , padding 16
                         ]
                     |> Just
         )
         possibleAnswers
-        |> Element.wrappedRow [ Element.spacing 8, Element.centerX ]
+        |> wrappedRow [ spacing 8, centerX ]
 
 
 questionView : Types.Question -> Element FrontendMsg
@@ -559,40 +532,30 @@ questionView q =
                             -- Should be impossible
                             Noop <| "impossible onPress in questionView: " ++ optionText
             in
-            Element.column
-                [ Element.spacing 16, Element.centerX, Element.centerY ]
-                [ Element.text attributeQuestion.title
-                , Element.wrappedRow [ Element.spacing 8, Element.centerX, Element.width Element.fill ]
+            column
+                [ spacing 16, centerX, centerY ]
+                [ text attributeQuestion.title
+                , wrappedRow [ spacing 8, centerX, width fill ]
                     (List.map
                         (\option ->
                             let
-                                text =
+                                label =
                                     option.emoji ++ " " ++ option.text
                             in
-                            Element.Input.button
-                                [ Element.Background.color
-                                    (if isSelectedOption option.text then
-                                        Element.rgb 0.7 0.8 0.9
+                            Ui.button
+                                [ Ui.hilightWhen (isSelectedOption option.text)
+                                , height fill
+                                , if String.length label > 30 then
+                                    Font.size 12
 
-                                     else
-                                        Element.rgb 0.9 0.9 0.9
-                                    )
-                                , Element.height Element.fill
-                                , Element.Border.width 1
-                                , Element.Border.color <| Element.rgb 0.1 0.1 0.1
-                                , Element.padding 16
-                                , if String.length text > 30 then
-                                    Element.Font.size 12
-
-                                  else if String.length text > 20 then
-                                    Element.Font.size 16
+                                  else if String.length label > 20 then
+                                    Font.size 16
 
                                   else
-                                    Element.Font.size 20
+                                    Font.size 20
                                 ]
-                                { onPress = Just (onPress option.text)
-                                , label = Element.text text
-                                }
+                                (onPress option.text)
+                                (text label)
                         )
                         attributeQuestion.options
                     )
@@ -639,13 +602,13 @@ experienceLevelToString experienceLevel =
 
 questionContainer : Element msg -> Element msg -> Element msg
 questionContainer title answers_ =
-    Element.column
-        [ Element.spacing 16, Element.centerX, Element.centerY ]
+    column
+        [ spacing 16, centerX, centerY ]
         [ title, answers_ ]
 
 
 happinessQuestionTitle =
-    Element.paragraph [ Element.Font.center ] [ Element.text "How are you doing?" ]
+    paragraph [ Font.center ] [ text "How are you doing?" ]
 
 
 happinessAnswers =
@@ -664,36 +627,27 @@ happinessToString howAreYou =
 
 answers : (a -> msg) -> (a -> String) -> List a -> Maybe a -> Element msg
 answers onPress toString options selected =
-    Element.wrappedRow [ Element.spacing 8, Element.centerX, Element.width Element.fill ]
+    wrappedRow [ spacing 8, centerX, width fill ]
         (List.map
             (\option ->
                 let
-                    text =
+                    label =
                         toString option
                 in
                 Ui.button
-                    [ Element.Background.color
-                        (if selected == Just option then
-                            Element.rgb 0.7 0.8 0.9
+                    [ Ui.hilightWhen (selected == Just option)
+                    , height fill
+                    , if String.length label > 30 then
+                        Font.size 12
 
-                         else
-                            Element.rgb 0.9 0.9 0.9
-                        )
-                    , Element.height Element.fill
-                    , Element.Border.width 1
-                    , Element.Border.color <| Element.rgb 0.1 0.1 0.1
-                    , Element.padding 16
-                    , if String.length text > 30 then
-                        Element.Font.size 12
-
-                      else if String.length text > 20 then
-                        Element.Font.size 16
+                      else if String.length label > 20 then
+                        Font.size 16
 
                       else
-                        Element.Font.size 20
+                        Font.size 20
                     ]
                     (onPress option)
-                    (Element.text text)
+                    (text label)
             )
             options
         )

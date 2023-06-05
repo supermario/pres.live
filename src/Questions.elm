@@ -5,6 +5,66 @@ import Lamdera
 import List.Extra as List
 
 
+attributeQuestion : AttributeType -> Question
+attributeQuestion attributeType =
+    case attributeType of
+        AttendanceReason ->
+            { title = "Why are you here?"
+            , multiselect = True
+            , options =
+                allAttendanceReasons |> List.map attendanceReasonToOption
+            }
+
+        Profession ->
+            { title = "What field(s) are you in?"
+            , multiselect = True
+            , options =
+                allProfessions |> List.map professionToOption
+            }
+
+        Experience ->
+            { title = "Experience in your field(s)?"
+            , multiselect = False
+            , options =
+                allExperiences |> List.map experienceToOption
+            }
+
+        Scale ->
+            { title = "What is the scale of your Elm project?"
+            , multiselect = False
+            , options =
+                allScales |> List.map scaleToOption
+            }
+
+        Languages ->
+            { title = "Languages you work with currently"
+            , multiselect = True
+            , options =
+                allLanguages |> List.map languageToOption
+            }
+
+
+openQuestions : List Question
+openQuestions =
+    [ { title = "The systems I work on are getting more complex."
+      , multiselect = False
+      , options =
+            [ { comment = False, emoji = "✅", text = "Absolutely" }
+            , { comment = False, emoji = "🤷", text = "Not sure" }
+            , { comment = False, emoji = "🙅🏼\u{200D}♀️", text = "Definitely not" }
+            ]
+      }
+    , { title = "I feel well equipped to deal with or reduce the complexity."
+      , multiselect = False
+      , options =
+            [ { comment = False, emoji = "✅", text = "Absolutely" }
+            , { comment = False, emoji = "🤷", text = "Not sure" }
+            , { comment = False, emoji = "🙅🏼\u{200D}♀️", text = "Definitely not" }
+            ]
+      }
+    ]
+
+
 type alias QuestionOption =
     { comment : Bool, emoji : String, text : String }
 
@@ -329,22 +389,22 @@ scaleToOption : Scale -> QuestionOption
 scaleToOption scale =
     case scale of
         TenMillionPlus ->
-            { comment = False, emoji = "🌍", text = "10M+" }
+            { comment = False, emoji = "", text = "10M+" }
 
         OneMillionPlus ->
-            { comment = False, emoji = "🌎", text = "1M+" }
+            { comment = False, emoji = "", text = "1M+" }
 
         HundredThousandPlus ->
-            { comment = False, emoji = "🌏", text = "100K+" }
+            { comment = False, emoji = "", text = "100K+" }
 
         TenThousandPlus ->
-            { comment = False, emoji = "🌐", text = "10K+" }
+            { comment = False, emoji = "", text = "10K+" }
 
         OneThousandPlus ->
-            { comment = False, emoji = "🌐", text = "1K+" }
+            { comment = False, emoji = "", text = "1K+" }
 
         ZeroToOneThousand ->
-            { comment = False, emoji = "🌐", text = "0-1K" }
+            { comment = False, emoji = "", text = "0-1K" }
 
 
 type Language
@@ -456,45 +516,6 @@ languageToOption language =
 
         Unison ->
             { comment = False, emoji = "🟣", text = "Unison" }
-
-
-attributeQuestion : AttributeType -> Question
-attributeQuestion attributeType =
-    case attributeType of
-        AttendanceReason ->
-            { title = "Why are you here?"
-            , multiselect = True
-            , options =
-                allAttendanceReasons |> List.map attendanceReasonToOption
-            }
-
-        Profession ->
-            { title = "What is your field?"
-            , multiselect = True
-            , options =
-                allProfessions |> List.map professionToOption
-            }
-
-        Experience ->
-            { title = "Experience in your field?"
-            , multiselect = False
-            , options =
-                allExperiences |> List.map experienceToOption
-            }
-
-        Scale ->
-            { title = "What is the scale of your Elm project?"
-            , multiselect = False
-            , options =
-                allScales |> List.map scaleToOption
-            }
-
-        Languages ->
-            { title = "Languages you work with currently"
-            , multiselect = True
-            , options =
-                allLanguages |> List.map languageToOption
-            }
 
 
 
