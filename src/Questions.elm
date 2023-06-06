@@ -98,7 +98,7 @@ openQuestions =
     -- , basicQuestion "Does your code handle HTTP 418 error codes?"
     , { title = "What percentage of your code is glue code?"
       , multiselect = False
-      , hideLabelInButton = True
+      , hideLabelInButton = False
       , options =
             [ { comment = True, emoji = "🟢", text = "<10%" }
             , { comment = True, emoji = "🟡", text = "<20%" }

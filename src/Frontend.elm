@@ -463,15 +463,15 @@ largeQuestionSlide title =
     text title
 
 
-buttonPressStyle : { presentMode : ViewMode, label : String, emoji : String, hideLabelInButton : Bool, count : Int } -> Element msg
-buttonPressStyle { presentMode, label, emoji, hideLabelInButton, count } =
+answerCounterPill : { presentMode : ViewMode, label : String, emoji : String, hideLabelInButton : Bool, count : Int } -> Element msg
+answerCounterPill { presentMode, label, emoji, hideLabelInButton, count } =
     [ text emoji
     , if presentMode == Present && hideLabelInButton then
         none
 
       else
         text label
-    , el [ Ui.rounded, paddingXY 10 5, Background.color Ui.colours.bg ] <| text <| String.fromInt count
+    , el [ Font.bold, Font.color Ui.colours.bg, Ui.rounded, paddingXY 10 5, Background.color Ui.colours.fg ] <| text <| String.fromInt count
     ]
         |> row [ spacing 10 ]
         |> el
@@ -541,7 +541,7 @@ adminQuestionView userModel mode currentQuestion adminData =
                                 count =
                                     allAnswers |> List.count ((==) option.emoji)
                             in
-                            buttonPressStyle
+                            answerCounterPill
                                 { presentMode = mode
                                 , label = option.text
                                 , emoji = option.emoji
@@ -572,7 +572,7 @@ adminQuestionView userModel mode currentQuestion adminData =
                                 count =
                                     List.count ((==) option.text) answers_
                             in
-                            buttonPressStyle
+                            answerCounterPill
                                 { presentMode = mode
                                 , label = option.text
                                 , emoji = option.emoji
@@ -612,7 +612,7 @@ adminAnswers viewMode toString possibleAnswers answers_ =
                 count =
                     List.count ((==) answer) answers_
             in
-            buttonPressStyle
+            answerCounterPill
                 { presentMode = viewMode
                 , label = toString answer
                 , emoji = ""
