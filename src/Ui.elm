@@ -80,20 +80,24 @@ button_ attributes onPress label =
         }
 
 
-multilineInput : String -> (String -> msg) -> String -> Element msg
-multilineInput label onChange field =
+multilineInput : String -> String -> (String -> msg) -> String -> Element msg
+multilineInput label placeholderLabel onChange field =
     Input.multiline
         [ Attr.attribute "data-gramm_editor" "false" |> htmlAttribute
         , Attr.attribute "data-enable-grammarly" "false" |> htmlAttribute
         , rounded
         ]
         { text = field
-        , placeholder = Nothing
+        , placeholder = Just (Input.placeholder [] (text placeholderLabel))
         , onChange = onChange
         , label =
-            Input.labelAbove
-                []
-                (paragraph [] [ text label ])
+            if label == "" then
+                Input.labelHidden placeholderLabel
+
+            else
+                Input.labelAbove
+                    []
+                    (paragraph [] [ text label ])
         , spellcheck = True
         }
 

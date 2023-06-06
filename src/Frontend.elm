@@ -426,26 +426,28 @@ view model =
 
                 IsUser userData ->
                     column
-                        [ width fill, spacing 32 ]
+                        [ width fill, height fill, spacing 32 ]
                         [ questionView userData.userCount userData.question
                         , column
-                            [ width fill, spacing 16 ]
-                            [ Ui.multilineInput "Have any questions or comments?" TypedComment userData.comment
-                            , Ui.button
-                                [ Background.color Ui.colors.green
-                                , width fill
-                                ]
-                                PressedSubmitComment
-                                ((case userData.commentSubmitStatus of
-                                    NotSubmitted ->
-                                        "Submit question/comment"
+                            [ width fill, spacing 16, alignBottom ]
+                            [ row [ width fill ]
+                                [ Ui.multilineInput "" "Comments & feedback..." TypedComment userData.comment
+                                , Ui.button
+                                    [ Background.color Ui.colors.green
+                                    , height (px 48)
+                                    ]
+                                    PressedSubmitComment
+                                    ((case userData.commentSubmitStatus of
+                                        NotSubmitted ->
+                                            ">"
 
-                                    Submitting ->
-                                        "Submitting..."
-                                 )
-                                    |> text
-                                    |> el [ centerX ]
-                                )
+                                        Submitting ->
+                                            "..."
+                                     )
+                                        |> text
+                                        |> el [ centerX ]
+                                    )
+                                ]
                             ]
                         ]
             )
