@@ -15,11 +15,16 @@ colors =
     lightMode
 
 
+colours =
+    colors
+
+
 lightMode =
     { font = fromHex "#333"
     , orange = fromHex "#FAE6CC"
     , blue = fromHex "#C9DBF8"
     , green = fromHex "#CCE6CC"
+    , bg = fromHex "#FFFFFF"
     , bg2 = fromHex "#E9E9E9"
     , slide =
         { purple = fromHex "#6371d7"
@@ -115,3 +120,11 @@ hilightWhen condition =
          else
             colors.bg2
         )
+
+
+pluralise singular multiple count =
+    if count == 1 then
+        singular
+
+    else
+        multiple

@@ -9,6 +9,7 @@ import List.Extra as List
 all =
     []
         ++ [ IntroScreen
+           , HowAreYou_
            , AttributeQuestion_ AttendanceReason
            , AttributeQuestion_ Profession
            , AttributeQuestion_ Experience
@@ -16,11 +17,13 @@ all =
            , AttributeQuestion_ Languages
            ]
         ++ (openQuestions |> List.map NormalisedQuestion_)
-        ++ [ HowAreYou_
-           , HowExperiencedAreYouWithElm_
-           , HowExperiencedAreYouWithProgramming_
-           , WhatCountryAreYouFrom_
-           ]
+
+
+
+-- ++ [ HowExperiencedAreYouWithElm_
+--    , HowExperiencedAreYouWithProgramming_
+--    , WhatCountryAreYouFrom_
+--    ]
 
 
 attributeQuestion : AttributeType -> NormalisedQuestion
@@ -29,6 +32,7 @@ attributeQuestion attributeType =
         AttendanceReason ->
             { title = "Why are you here?"
             , multiselect = True
+            , hideLabelInButton = True
             , options =
                 allAttendanceReasons |> List.map attendanceReasonToOption
             }
@@ -36,6 +40,7 @@ attributeQuestion attributeType =
         Profession ->
             { title = "What field(s) are you in?"
             , multiselect = True
+            , hideLabelInButton = True
             , options =
                 allProfessions |> List.map professionToOption
             }
@@ -43,6 +48,7 @@ attributeQuestion attributeType =
         Experience ->
             { title = "Experience in your field(s)?"
             , multiselect = False
+            , hideLabelInButton = True
             , options =
                 allExperiences |> List.map experienceToOption
             }
@@ -50,6 +56,7 @@ attributeQuestion attributeType =
         Scale ->
             { title = "What is the scale of your project's (concurrent users)?"
             , multiselect = False
+            , hideLabelInButton = False
             , options =
                 allScales |> List.map scaleToOption
             }
@@ -57,6 +64,7 @@ attributeQuestion attributeType =
         Languages ->
             { title = "Languages you work with currently"
             , multiselect = True
+            , hideLabelInButton = False
             , options =
                 allLanguages |> List.map languageToOption
             }
@@ -70,6 +78,7 @@ openQuestions =
     , basicQuestion "Is this a boundary?"
     , { title = "Someone on our backend team changed a field name in the API.\nWe’ll find out at:"
       , multiselect = False
+      , hideLabelInButton = True
       , options =
             [ { comment = True, emoji = "💻", text = "Dev time" }
             , { comment = True, emoji = "🤖", text = "Build/Test/CI time" }
@@ -78,15 +87,18 @@ openQuestions =
       }
     , { title = "A 3rd party changed a field name in their API. \nWe’ll find out at:"
       , multiselect = False
+      , hideLabelInButton = True
       , options =
             [ { comment = True, emoji = "💻", text = "Dev time" }
             , { comment = True, emoji = "🤖", text = "Build/Test/CI time" }
             , { comment = True, emoji = "🔥", text = "Run time" }
             ]
       }
-    , basicQuestion "Does your code handle HTTP 418 error codes?"
+
+    -- , basicQuestion "Does your code handle HTTP 418 error codes?"
     , { title = "What percentage of your code is glue code?"
       , multiselect = False
+      , hideLabelInButton = True
       , options =
             [ { comment = True, emoji = "🟢", text = "<10%" }
             , { comment = True, emoji = "🟡", text = "<20%" }
@@ -97,6 +109,7 @@ openQuestions =
       }
     , { title = "How was it for you?"
       , multiselect = False
+      , hideLabelInButton = True
       , options =
             [ { comment = True, emoji = "🤩", text = "Great" }
             , { comment = True, emoji = "🤷🏼\u{200D}♀️", text = "Alright" }
@@ -144,6 +157,7 @@ basicQuestion : String -> NormalisedQuestion
 basicQuestion title =
     { title = title
     , multiselect = False
+    , hideLabelInButton = True
     , options = standardYesNoMaybeOptions
     }
 
@@ -161,7 +175,7 @@ type alias QuestionOption =
 
 
 type alias NormalisedQuestion =
-    { multiselect : Bool, title : String, options : List QuestionOption }
+    { multiselect : Bool, hideLabelInButton : Bool, title : String, options : List QuestionOption }
 
 
 type alias NormalisedQuestionAnswer =

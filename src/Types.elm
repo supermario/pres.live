@@ -13,7 +13,7 @@ import Url exposing (Url)
 
 
 type FrontendModel
-    = IsAdmin ViewMode Questions.CurrentQuestion AdminData
+    = IsAdmin UserModel ViewMode Questions.CurrentQuestion AdminData
     | IsUser UserModel
 
 

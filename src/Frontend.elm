@@ -44,7 +44,7 @@ init url key =
     in
     case Url.Parser.parse decodeUrl url of
         Just (Just secret) ->
-            ( IsUser { question = Nothing, comment = "", commentSubmitStatus = NotSubmitted, userCount = 1 }
+            ( IsUser userModelInit
             , Cmd.batch
                 [ Lamdera.sendToBackend (AdminAuth secret)
                 , setNewUrl
@@ -52,11 +52,15 @@ init url key =
             )
 
         _ ->
-            ( IsUser { question = Nothing, comment = "", commentSubmitStatus = NotSubmitted, userCount = 1 }
+            ( IsUser userModelInit
             , Cmd.batch
                 [ setNewUrl
                 ]
             )
+
+
+userModelInit =
+    { question = Nothing, comment = "", commentSubmitStatus = NotSubmitted, userCount = 1 }
 
 
 update : FrontendMsg -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
@@ -75,7 +79,7 @@ update msg model =
 
         PressedHowAreYou happiness ->
             case model of
-                IsAdmin _ _ _ ->
+                IsAdmin _ _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -90,7 +94,7 @@ update msg model =
 
         PressedHowExperiencedAreYouWithElm experienceLevel ->
             case model of
-                IsAdmin _ _ _ ->
+                IsAdmin _ _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -108,7 +112,7 @@ update msg model =
 
         PressedHowExperiencedAreYouWithProgramming experienceLevel ->
             case model of
-                IsAdmin _ _ _ ->
+                IsAdmin _ _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -126,7 +130,7 @@ update msg model =
 
         PressedWhatCountryAreYouFrom country ->
             case model of
-                IsAdmin _ _ _ ->
+                IsAdmin _ _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -141,7 +145,7 @@ update msg model =
 
         PressedAttributeQuestionAnswer attributeQuestionAnswer ->
             case model of
-                IsAdmin _ _ _ ->
+                IsAdmin _ _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userModel ->
@@ -156,7 +160,7 @@ update msg model =
 
         PressedNormalisedQuestionAnswer title answers ->
             case model of
-                IsAdmin _ _ _ ->
+                IsAdmin _ _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userModel ->
@@ -171,7 +175,7 @@ update msg model =
 
         AdminPressedNextQuestion ->
             case model of
-                IsAdmin _ _ _ ->
+                IsAdmin _ _ _ _ ->
                     ( model, Lamdera.sendToBackend AdminRequestNextQuestion )
 
                 IsUser _ ->
@@ -179,7 +183,7 @@ update msg model =
 
         AdminPressedReset ->
             case model of
-                IsAdmin _ _ _ ->
+                IsAdmin _ _ _ _ ->
                     ( model, Lamdera.sendToBackend AdminRequestReset )
 
                 IsUser _ ->
@@ -187,8 +191,8 @@ update msg model =
 
         AdminToggledMode ->
             case model of
-                IsAdmin mode q d ->
-                    ( IsAdmin
+                IsAdmin userModel mode q d ->
+                    ( IsAdmin userModel
                         (case mode of
                             Admin ->
                                 Present
@@ -206,7 +210,7 @@ update msg model =
 
         TypedComment text ->
             case model of
-                IsAdmin _ _ _ ->
+                IsAdmin _ _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -214,7 +218,7 @@ update msg model =
 
         PressedSubmitComment ->
             case model of
-                IsAdmin _ _ _ ->
+                IsAdmin _ _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -232,8 +236,9 @@ update msg model =
 
         PressedBanUser sessionId ->
             case model of
-                IsAdmin viewMode currentQuestion adminData ->
+                IsAdmin userModel viewMode currentQuestion adminData ->
                     ( IsAdmin
+                        userModel
                         viewMode
                         currentQuestion
                         { adminData | comments = List.filter (\comment -> comment.sessionId /= sessionId) adminData.comments }
@@ -245,7 +250,7 @@ update msg model =
 
         PressedRemoveAllBans ->
             case model of
-                IsAdmin _ _ _ ->
+                IsAdmin _ _ _ _ ->
                     ( model, Lamdera.sendToBackend RemoveAllBansRequest )
 
                 IsUser _ ->
@@ -257,16 +262,17 @@ updateFromBackend msg model =
     case msg of
         SetAdminMode currentQuestion answerData ->
             case model of
-                IsAdmin presentMode _ _ ->
-                    ( IsAdmin presentMode currentQuestion answerData, Cmd.none )
+                IsAdmin userModel presentMode _ _ ->
+                    ( IsAdmin userModel presentMode currentQuestion answerData, Cmd.none )
 
                 _ ->
-                    ( IsAdmin Admin currentQuestion answerData, Cmd.none )
+                    ( IsAdmin userModelInit Admin currentQuestion answerData, Cmd.none )
 
         StreamAttributeQuestionAnswer sessionId attributeQuestionAnswer ->
             case model of
-                IsAdmin presentMode currentQuestion answerData ->
-                    ( IsAdmin presentMode
+                IsAdmin userModel presentMode currentQuestion answerData ->
+                    ( IsAdmin userModel
+                        presentMode
                         currentQuestion
                         { answerData
                             | attributeQuestionAnswers =
@@ -287,8 +293,9 @@ updateFromBackend msg model =
 
         StreamNormalizedQuestionAnswer sessionId title answers ->
             case model of
-                IsAdmin presentMode currentQuestion answerData ->
-                    ( IsAdmin presentMode
+                IsAdmin userModel presentMode currentQuestion answerData ->
+                    ( IsAdmin userModel
+                        presentMode
                         currentQuestion
                         { answerData
                             | normalizedQuestionAnswers =
@@ -311,8 +318,8 @@ updateFromBackend msg model =
 
         StreamComment comment ->
             case model of
-                IsAdmin presentMode currentQuestion answerData ->
-                    ( IsAdmin presentMode currentQuestion { answerData | comments = comment :: answerData.comments }
+                IsAdmin userModel presentMode currentQuestion answerData ->
+                    ( IsAdmin userModel presentMode currentQuestion { answerData | comments = comment :: answerData.comments }
                     , Cmd.none
                     )
 
@@ -321,23 +328,23 @@ updateFromBackend msg model =
 
         UpdateAdmin answerData ->
             case model of
-                IsAdmin presentMode currentQuestion _ ->
-                    ( IsAdmin presentMode currentQuestion answerData, Cmd.none )
+                IsAdmin userModel presentMode currentQuestion _ ->
+                    ( IsAdmin userModel presentMode currentQuestion answerData, Cmd.none )
 
                 IsUser _ ->
                     ( model, Cmd.none )
 
         SetCurrentQuestion question ->
             case model of
-                IsAdmin mode _ adminData ->
-                    ( IsAdmin mode question adminData, Cmd.none )
+                IsAdmin userModel mode _ adminData ->
+                    ( IsAdmin userModel mode question adminData, Cmd.none )
 
                 IsUser userData ->
                     ( { userData | question = currentPageToQuestion question } |> IsUser, Cmd.none )
 
         PostCommentResponse ->
             case model of
-                IsAdmin _ _ _ ->
+                IsAdmin _ _ _ _ ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -345,15 +352,15 @@ updateFromBackend msg model =
 
         RemoveAllBansResponse comments ->
             case model of
-                IsAdmin viewMode currentQuestion adminData ->
-                    ( IsAdmin viewMode currentQuestion { adminData | comments = comments }, Cmd.none )
+                IsAdmin userModel viewMode currentQuestion adminData ->
+                    ( IsAdmin userModel viewMode currentQuestion { adminData | comments = comments }, Cmd.none )
 
                 IsUser userData ->
                     ( model, Cmd.none )
 
         UserCountChanged userCount ->
             case model of
-                IsAdmin viewMode currentQuestion adminData ->
+                IsAdmin _ viewMode currentQuestion adminData ->
                     ( model, Cmd.none )
 
                 IsUser userData ->
@@ -391,12 +398,12 @@ view model =
     , body =
         [ Ui.layout
             (case model of
-                IsAdmin presentMode currentQuestion answerData ->
+                IsAdmin userModel presentMode currentQuestion answerData ->
                     case presentMode of
                         Admin ->
                             column
                                 [ width fill, height fill, spacing 20 ]
-                                [ adminQuestionView currentQuestion answerData
+                                [ adminQuestionView userModel presentMode currentQuestion answerData
                                 , row [ spacing 8 ]
                                     [ Ui.button []
                                         AdminToggledMode
@@ -413,8 +420,8 @@ view model =
 
                         Present ->
                             column
-                                [ width fill, height fill, spacing 8 ]
-                                [ adminQuestionView currentQuestion answerData
+                                [ width fill, height fill, spacing 8, Font.size 80 ]
+                                [ adminQuestionView userModel presentMode currentQuestion answerData
                                 ]
 
                 IsUser userData ->
@@ -446,31 +453,76 @@ view model =
     }
 
 
-adminQuestionView : CurrentQuestion -> AdminData -> Element FrontendMsg
-adminQuestionView currentQuestion adminData =
+largeQuestionSlide title =
+    -- column [ width fill, spacing 60, height fill ]
+    --     [ row [ Font.bold, width fill, centerY ] [ paragraph [ Font.center ] [ text nQuestion.title ] ]
+    --     , answerOptions
+    --     ]
+    text title
+
+
+buttonPressStyle : { presentMode : ViewMode, label : String, emoji : String, hideLabelInButton : Bool, count : Int } -> Element msg
+buttonPressStyle { presentMode, label, emoji, hideLabelInButton, count } =
+    [ text emoji
+    , if presentMode == Present && hideLabelInButton then
+        none
+
+      else
+        text label
+    , el [ Ui.rounded, paddingXY 10 5, Background.color Ui.colours.bg ] <| text <| String.fromInt count
+    ]
+        |> row [ spacing 10 ]
+        |> el
+            [ Background.color Ui.colors.bg2
+            , Ui.rounded
+            , paddingXY 10 5
+            ]
+
+
+adminQuestionView : UserModel -> ViewMode -> CurrentQuestion -> AdminData -> Element FrontendMsg
+adminQuestionView userModel mode currentQuestion adminData =
     case currentQuestion of
         IntroScreen ->
-            Element.text "Intro page"
+            column [ width fill, height fill, spacing 80 ]
+                [ paragraph [ Font.color Ui.colours.slide.purple, Font.bold, Font.center, Font.size 80, centerY ] [ text "The unbearable weight of glue 🍯" ]
+                , column [ centerX ]
+                    [ paragraph [ Font.bold, Font.center, Font.size 60, centerY ] [ text "This talk involves live interaction," ]
+                    , paragraph [ Font.bold, Font.center, Font.size 60, centerY ] [ text "open URL on a mobile/tablet/laptop:" ]
+                    ]
+                , paragraph
+                    [ Font.color Ui.colours.slide.purple, Font.bold, Font.underline, Font.center, Font.size 80, centerY ]
+                    [ text "pres.lamdera.app" ]
+                , row
+                    [ centerX ]
+                    [ el [ Font.size 80, Font.heavy ] (text (String.fromInt userModel.userCount ++ " "))
+                    , el [ Font.size 60 ]
+                        (text
+                            (Ui.pluralise "person has" "people have" userModel.userCount
+                                ++ " joined"
+                            )
+                        )
+                    ]
+                ]
 
         HowAreYou_ ->
             questionContainer
                 happinessQuestionTitle
-                (adminAnswers happinessToString happinessAnswers adminData.howAreYou)
+                (adminAnswers mode happinessToString happinessAnswers adminData.howAreYou)
 
         HowExperiencedAreYouWithElm_ ->
             questionContainer
                 howExperiencedAreYouWithElmTitle
-                (adminAnswers experienceLevelToString experienceLevelAnswers adminData.howExperiencedAreYouWithElm)
+                (adminAnswers mode experienceLevelToString experienceLevelAnswers adminData.howExperiencedAreYouWithElm)
 
         HowExperiencedAreYouWithProgramming_ ->
             questionContainer
                 howExperiencedAreYouWithProgrammingTitle
-                (adminAnswers experienceLevelToString experienceLevelAnswers adminData.howExperiencedAreYouWithProgramming)
+                (adminAnswers mode experienceLevelToString experienceLevelAnswers adminData.howExperiencedAreYouWithProgramming)
 
         WhatCountryAreYouFrom_ ->
             questionContainer
                 countryQuestionTitle
-                (adminAnswers countryToString countryAnswers adminData.whatCountryAreYouFrom)
+                (adminAnswers mode countryToString countryAnswers adminData.whatCountryAreYouFrom)
 
         NormalisedQuestion_ nQuestion ->
             let
@@ -487,26 +539,19 @@ adminQuestionView currentQuestion adminData =
                                 count =
                                     allAnswers |> List.count ((==) option.emoji)
                             in
-                            -- if count == 0 then
-                            --     Nothing
-                            -- else
-                            option.emoji
-                                ++ " "
-                                ++ option.text
-                                ++ " "
-                                ++ String.fromInt count
-                                |> text
-                                |> el
-                                    [ Background.color <| rgb 0.9 0.9 0.9
-                                    , Ui.rounded
-                                    , Ui.style.padding
-                                    ]
+                            buttonPressStyle
+                                { presentMode = mode
+                                , label = option.text
+                                , emoji = option.emoji
+                                , hideLabelInButton = nQuestion.hideLabelInButton
+                                , count = count
+                                }
                         )
                         nQuestion.options
-                        |> wrappedRow [ spacing 8, centerX ]
+                        |> wrappedRow [ spacing 8, centerX, centerY ]
             in
-            column [ width fill, spacing 20, height fill ]
-                [ row [ Font.bold, Font.size 30 ] [ paragraph [] [ text nQuestion.title ] ]
+            column [ width fill, spacing 60, height fill ]
+                [ row [ Font.bold, width fill, centerY ] [ paragraph [ Font.center ] [ text nQuestion.title ] ]
                 , answerOptions
                 ]
 
@@ -525,26 +570,19 @@ adminQuestionView currentQuestion adminData =
                                 count =
                                     List.count ((==) option.text) answers_
                             in
-                            -- if count == 0 then
-                            --     Nothing
-                            -- else
-                            option.emoji
-                                ++ " "
-                                ++ option.text
-                                ++ " "
-                                ++ String.fromInt count
-                                |> text
-                                |> el
-                                    [ Background.color <| rgb 0.9 0.9 0.9
-                                    , Ui.rounded
-                                    , Ui.style.padding
-                                    ]
+                            buttonPressStyle
+                                { presentMode = mode
+                                , label = option.text
+                                , emoji = option.emoji
+                                , hideLabelInButton = attributeQuestion.hideLabelInButton
+                                , count = count
+                                }
                         )
                         attributeQuestion.options
-                        |> wrappedRow [ spacing 8, centerX, centerY ]
+                        |> wrappedRow [ spacing 20, centerX, centerY ]
             in
-            column [ width fill, spacing 20, height fill ]
-                [ row [ Font.bold, Font.size 30, Font.center, centerY ] [ paragraph [] [ text attributeQuestion.title ] ]
+            column [ width fill, spacing 60, height fill ]
+                [ row [ Font.bold, Font.center, width fill, centerY ] [ paragraph [] [ text attributeQuestion.title ] ]
                 , answerOptions
                 ]
 
@@ -564,31 +602,25 @@ countryQuestionTitle =
     paragraph [ Font.center ] [ text "What country do you live in?" ]
 
 
-adminAnswers : (a -> String) -> List a -> List a -> Element msg
-adminAnswers toString possibleAnswers answers_ =
+adminAnswers : ViewMode -> (a -> String) -> List a -> List a -> Element msg
+adminAnswers viewMode toString possibleAnswers answers_ =
     List.filterMap
         (\answer ->
             let
                 count =
                     List.count ((==) answer) answers_
             in
-            if count == 0 then
-                Nothing
-
-            else
-                toString answer
-                    ++ " "
-                    ++ String.fromInt count
-                    |> text
-                    |> el
-                        [ Background.color <| Ui.colors.bg2
-                        , Ui.rounded
-                        , padding 16
-                        ]
-                    |> Just
+            buttonPressStyle
+                { presentMode = viewMode
+                , label = toString answer
+                , emoji = ""
+                , hideLabelInButton = False
+                , count = count
+                }
+                |> Just
         )
         possibleAnswers
-        |> wrappedRow [ spacing 8, centerX ]
+        |> wrappedRow [ spacing 8, centerX, centerY ]
 
 
 questionView : Int -> Maybe Questions.Question -> Element FrontendMsg
@@ -603,7 +635,12 @@ questionView userCount q =
                 , row
                     [ centerX ]
                     [ el [ Font.size 48, Font.heavy ] (text (String.fromInt userCount ++ " "))
-                    , el [ Font.size 24 ] (text "people have joined")
+                    , el [ Font.size 24 ]
+                        (text
+                            (Ui.pluralise "person has" "people have" userCount
+                                ++ " joined"
+                            )
+                        )
                     ]
                 ]
 
@@ -630,8 +667,8 @@ questionView userCount q =
         Just (NormalisedQuestionA nQuestion userAnswers) ->
             column
                 [ spacing 16, centerX, centerY ]
-                [ paragraph [] [ text nQuestion.title ]
-                , wrappedRow [ spacing 8, centerX, width fill ]
+                [ paragraph [ Font.bold, Font.center ] [ text nQuestion.title ]
+                , wrappedRow [ spacing 8, centerX ]
                     (List.map
                         (\option ->
                             let
@@ -714,8 +751,8 @@ questionView userCount q =
             in
             column
                 [ spacing 16, centerX, centerY ]
-                [ paragraph [] [ text attributeQuestion.title ]
-                , wrappedRow [ spacing 8, centerX, width fill ]
+                [ paragraph [ Font.center, Font.bold ] [ text attributeQuestion.title ]
+                , wrappedRow [ spacing 8, centerX ]
                     (List.map
                         (\option ->
                             let
@@ -783,8 +820,8 @@ experienceLevelToString experienceLevel =
 questionContainer : Element msg -> Element msg -> Element msg
 questionContainer title answers_ =
     column
-        [ spacing 16, centerX, centerY ]
-        [ title, answers_ ]
+        [ spacing 70, width fill, height fill ]
+        [ el [ Font.bold, centerX, centerY ] <| title, answers_ ]
 
 
 happinessQuestionTitle =
@@ -807,7 +844,7 @@ happinessToString howAreYou =
 
 viewAnswers : (a -> msg) -> (a -> String) -> List a -> Maybe a -> Element msg
 viewAnswers onPress toString options selected =
-    wrappedRow [ spacing 8, centerX, width fill ]
+    wrappedRow [ spacing 8, centerX ]
         (List.map
             (\option ->
                 let
