@@ -368,8 +368,8 @@ updateFromBackend msg model =
 
         UserCountChanged userCount ->
             case model of
-                IsAdmin _ viewMode currentQuestion adminData ->
-                    ( model, Cmd.none )
+                IsAdmin userData viewMode currentQuestion adminData ->
+                    ( IsAdmin { userData | userCount = userCount } viewMode currentQuestion adminData, Cmd.none )
 
                 IsUser userData ->
                     ( IsUser { userData | userCount = userCount }, Cmd.none )
