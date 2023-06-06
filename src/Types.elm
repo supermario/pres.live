@@ -60,6 +60,7 @@ type FrontendMsg
     | PressedAttributeQuestionAnswer Questions.AttributeQuestionAnswer
     | PressedNormalisedQuestionAnswer String (List String)
     | AdminPressedNextQuestion
+    | AdminPressedPreviousQuestion
     | AdminPressedReset
     | AdminToggledMode
     | TypedComment String
@@ -78,6 +79,7 @@ type ToBackend
     | PressedNormalisedQuestionAnswer_ String (List String)
     | AdminAuth String
     | AdminRequestNextQuestion
+    | AdminPressedPreviousQuestion_
     | AdminRequestReset
     | PostCommentRequest NonemptyString
     | BanUserRequest SessionId

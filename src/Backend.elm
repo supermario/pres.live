@@ -196,6 +196,15 @@ updateFromFrontendWithTime time sessionId clientId msg model =
                     )
                 )
 
+        AdminPressedPreviousQuestion_ ->
+            requiringAdmin model
+                sessionId
+                (\_ ->
+                    ( { model | currentQuestion = previousCurrentQuestion model.currentQuestion }
+                    , Lamdera.broadcast (SetCurrentQuestion (previousCurrentQuestion model.currentQuestion))
+                    )
+                )
+
         AdminRequestReset ->
             requiringAdmin model
                 sessionId
@@ -275,6 +284,16 @@ nextCurrentQuestion currentQuestion =
 
                 [] ->
                     currentQuestion
+
+        Nothing ->
+            firstQuestion
+
+
+previousCurrentQuestion : CurrentQuestion -> CurrentQuestion
+previousCurrentQuestion currentQuestion =
+    case List.findIndex (\q -> q == currentQuestion) Questions.all of
+        Just index ->
+            Questions.all |> List.getAt (index - 1) |> Maybe.withDefault HowAreYou_
 
         Nothing ->
             firstQuestion

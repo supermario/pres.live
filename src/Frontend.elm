@@ -181,6 +181,14 @@ update msg model =
                 IsUser _ ->
                     ( model, Cmd.none )
 
+        AdminPressedPreviousQuestion ->
+            case model of
+                IsAdmin _ _ _ _ ->
+                    ( model, Lamdera.sendToBackend AdminPressedPreviousQuestion_ )
+
+                IsUser _ ->
+                    ( model, Cmd.none )
+
         AdminPressedReset ->
             case model of
                 IsAdmin _ _ _ _ ->
@@ -408,6 +416,9 @@ view model =
                                     [ Ui.button []
                                         AdminToggledMode
                                         (text "Present")
+                                    , Ui.button []
+                                        AdminPressedPreviousQuestion
+                                        (text "Previous Question")
                                     , Ui.button []
                                         AdminPressedNextQuestion
                                         (text "Next Question")
