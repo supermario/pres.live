@@ -33,6 +33,7 @@ attributeQuestion attributeType =
             { title = "Why are you here?"
             , multiselect = True
             , hideLabelInButton = True
+            , sortResultsByCount = True
             , options =
                 allAttendanceReasons |> List.map attendanceReasonToOption
             }
@@ -41,6 +42,7 @@ attributeQuestion attributeType =
             { title = "What field(s) are you in?"
             , multiselect = True
             , hideLabelInButton = True
+            , sortResultsByCount = True
             , options =
                 allProfessions |> List.map professionToOption
             }
@@ -49,6 +51,7 @@ attributeQuestion attributeType =
             { title = "Experience in your field(s)?"
             , multiselect = False
             , hideLabelInButton = True
+            , sortResultsByCount = False
             , options =
                 allExperiences |> List.map experienceToOption
             }
@@ -57,6 +60,7 @@ attributeQuestion attributeType =
             { title = "What is the scale of your project's (concurrent users)?"
             , multiselect = False
             , hideLabelInButton = False
+            , sortResultsByCount = False
             , options =
                 allScales |> List.map scaleToOption
             }
@@ -65,6 +69,7 @@ attributeQuestion attributeType =
             { title = "Languages you work with currently"
             , multiselect = True
             , hideLabelInButton = False
+            , sortResultsByCount = True
             , options =
                 allLanguages |> List.map languageToOption
             }
@@ -79,6 +84,7 @@ openQuestions =
     , { title = "Someone on our backend team changed a field name in the API.\nWe’ll find out at:"
       , multiselect = False
       , hideLabelInButton = True
+      , sortResultsByCount = False
       , options =
             [ { comment = True, emoji = "💻", text = "Dev time" }
             , { comment = True, emoji = "🤖", text = "Build/Test/CI time" }
@@ -88,6 +94,7 @@ openQuestions =
     , { title = "A 3rd party changed a field name in their API. \nWe’ll find out at:"
       , multiselect = False
       , hideLabelInButton = True
+      , sortResultsByCount = False
       , options =
             [ { comment = True, emoji = "💻", text = "Dev time" }
             , { comment = True, emoji = "🤖", text = "Build/Test/CI time" }
@@ -99,6 +106,7 @@ openQuestions =
     , { title = "What percentage of your code is glue code?"
       , multiselect = False
       , hideLabelInButton = False
+      , sortResultsByCount = False
       , options =
             [ { comment = True, emoji = "🟢", text = "<10%" }
             , { comment = True, emoji = "🟡", text = "<20%" }
@@ -110,6 +118,7 @@ openQuestions =
     , { title = "How was it for you?"
       , multiselect = False
       , hideLabelInButton = True
+      , sortResultsByCount = False
       , options =
             [ { comment = True, emoji = "🤩", text = "Great" }
             , { comment = True, emoji = "🤷🏼\u{200D}♀️", text = "Alright" }
@@ -158,6 +167,7 @@ basicQuestion title =
     { title = title
     , multiselect = False
     , hideLabelInButton = True
+    , sortResultsByCount = False
     , options = standardYesNoMaybeOptions
     }
 
@@ -175,7 +185,12 @@ type alias QuestionOption =
 
 
 type alias NormalisedQuestion =
-    { multiselect : Bool, hideLabelInButton : Bool, title : String, options : List QuestionOption }
+    { multiselect : Bool
+    , hideLabelInButton : Bool
+    , sortResultsByCount : Bool
+    , title : String
+    , options : List QuestionOption
+    }
 
 
 type alias NormalisedQuestionAnswer =

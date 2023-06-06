@@ -583,15 +583,29 @@ adminQuestionView userModel mode currentQuestion adminData =
                                 count =
                                     List.count ((==) option.text) answers_
                             in
-                            answerCounterPill
-                                { presentMode = mode
-                                , label = option.text
-                                , emoji = option.emoji
-                                , hideLabelInButton = attributeQuestion.hideLabelInButton
-                                , count = count
-                                }
+                            { button =
+                                answerCounterPill
+                                    { presentMode = mode
+                                    , label = option.text
+                                    , emoji = option.emoji
+                                    , hideLabelInButton = attributeQuestion.hideLabelInButton
+                                    , count = count
+                                    }
+                            , count = count
+                            }
                         )
                         attributeQuestion.options
+                        |> (\unsortedOptions ->
+                                if attributeQuestion.sortResultsByCount then
+                                    unsortedOptions
+                                        |> List.sortBy (\option -> option.count)
+                                        |> List.reverse
+                                        |> List.map .button
+
+                                else
+                                    unsortedOptions
+                                        |> List.map .button
+                           )
                         |> wrappedRow [ spacing 20, centerX, centerY ]
             in
             column [ width fill, spacing 60, height fill ]
