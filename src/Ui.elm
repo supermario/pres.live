@@ -39,7 +39,16 @@ rounded =
 
 layout : Element msg -> Html msg
 layout elements =
-    Element.layout
+    Element.layoutWith
+        { options =
+            [ focusStyle
+                { borderColor = Nothing
+                , backgroundColor = Nothing
+                , shadow =
+                    Nothing
+                }
+            ]
+        }
         [ padding 16, Font.family [ Font.typeface "Montserrat", Font.typeface "system-ui" ] ]
         elements
 
@@ -101,7 +110,7 @@ fromHex str =
 hilightWhen condition =
     Background.color
         (if condition then
-            colors.blue
+            colors.green
 
          else
             colors.bg2

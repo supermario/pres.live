@@ -48,7 +48,7 @@ attributeQuestion attributeType =
             }
 
         Scale ->
-            { title = "What is the scale of your projects (concurrent users)?"
+            { title = "What is the scale of your project's (concurrent users)?"
             , multiselect = False
             , options =
                 allScales |> List.map scaleToOption
@@ -64,10 +64,10 @@ attributeQuestion attributeType =
 
 openQuestions : List NormalisedQuestion
 openQuestions =
-    [ basicQuestion "The systems I work on are getting more complex."
+    [ basicQuestion "Is the added complexity is worth it?"
+    , basicQuestion "The systems I work on are getting more complex."
     , basicQuestion "I feel well equipped to deal with or reduce complexity."
     , basicQuestion "Is this a boundary?"
-    , basicQuestion "The added complexity is worth it."
     , { title = "Someone on our backend team changed a field name in the API.\nWe’ll find out at:"
       , multiselect = False
       , options =
@@ -549,76 +549,76 @@ languageToOption : Language -> QuestionOption
 languageToOption language =
     case language of
         C ->
-            { comment = False, emoji = "🔴", text = "C" }
+            { comment = False, emoji = "", text = "C" }
 
         Clojure ->
-            { comment = False, emoji = "🟣", text = "Clojure" }
+            { comment = False, emoji = "", text = "Clojure" }
 
         CPlusPlus ->
-            { comment = False, emoji = "🟠", text = "C++" }
+            { comment = False, emoji = "", text = "C++" }
 
         CSharp ->
-            { comment = False, emoji = "🟠", text = "C#" }
+            { comment = False, emoji = "", text = "C#" }
 
         Elixir ->
-            { comment = False, emoji = "🟣", text = "Elixir" }
+            { comment = False, emoji = "", text = "Elixir" }
 
         Elm ->
-            { comment = False, emoji = "🟢", text = "Elm" }
+            { comment = False, emoji = "", text = "Elm" }
 
         Erlang ->
-            { comment = False, emoji = "🟣", text = "Erlang" }
+            { comment = False, emoji = "", text = "Erlang" }
 
         FSharp ->
-            { comment = False, emoji = "🟣", text = "F#" }
+            { comment = False, emoji = "", text = "F#" }
 
         Go ->
-            { comment = False, emoji = "🟠", text = "Go" }
+            { comment = False, emoji = "", text = "Go" }
 
         Haskell ->
-            { comment = False, emoji = "🟣", text = "Haskell" }
+            { comment = False, emoji = "", text = "Haskell" }
 
         Idris ->
-            { comment = False, emoji = "🟣", text = "Idris" }
+            { comment = False, emoji = "", text = "Idris" }
 
         Java ->
-            { comment = False, emoji = "🟠", text = "Java" }
+            { comment = False, emoji = "", text = "Java" }
 
         Javascript ->
-            { comment = False, emoji = "🟡", text = "Javascript" }
+            { comment = False, emoji = "", text = "Javascript" }
 
         Kotlin ->
-            { comment = False, emoji = "🟠", text = "Kotlin" }
+            { comment = False, emoji = "", text = "Kotlin" }
 
         OCaml ->
-            { comment = False, emoji = "🟣", text = "OCaml" }
+            { comment = False, emoji = "", text = "OCaml" }
 
         PHP ->
-            { comment = False, emoji = "🟡", text = "PHP" }
+            { comment = False, emoji = "", text = "PHP" }
 
         Python ->
-            { comment = False, emoji = "🟡", text = "Python" }
+            { comment = False, emoji = "", text = "Python" }
 
         ReasonML ->
-            { comment = False, emoji = "🟣", text = "ReasonML" }
+            { comment = False, emoji = "", text = "ReasonML" }
 
         Ruby ->
-            { comment = False, emoji = "🔴", text = "Ruby" }
+            { comment = False, emoji = "", text = "Ruby" }
 
         Rust ->
-            { comment = False, emoji = "🟠", text = "Rust" }
+            { comment = False, emoji = "", text = "Rust" }
 
         Scala ->
-            { comment = False, emoji = "🟠", text = "Scala" }
+            { comment = False, emoji = "", text = "Scala" }
 
         Swift ->
-            { comment = False, emoji = "🟠", text = "Swift" }
+            { comment = False, emoji = "", text = "Swift" }
 
         Typescript ->
-            { comment = False, emoji = "🟡", text = "Typescript" }
+            { comment = False, emoji = "", text = "Typescript" }
 
         Unison ->
-            { comment = False, emoji = "🟣", text = "Unison" }
+            { comment = False, emoji = "", text = "Unison" }
 
 
 

@@ -541,10 +541,10 @@ adminQuestionView currentQuestion adminData =
                                     ]
                         )
                         attributeQuestion.options
-                        |> wrappedRow [ spacing 8, centerX ]
+                        |> wrappedRow [ spacing 8, centerX, centerY ]
             in
             column [ width fill, spacing 20, height fill ]
-                [ row [ Font.bold, Font.size 30 ] [ paragraph [] [ text attributeQuestion.title ] ]
+                [ row [ Font.bold, Font.size 30, Font.center, centerY ] [ paragraph [] [ text attributeQuestion.title ] ]
                 , answerOptions
                 ]
 
@@ -630,7 +630,7 @@ questionView userCount q =
         Just (NormalisedQuestionA nQuestion userAnswers) ->
             column
                 [ spacing 16, centerX, centerY ]
-                [ text nQuestion.title
+                [ paragraph [] [ text nQuestion.title ]
                 , wrappedRow [ spacing 8, centerX, width fill ]
                     (List.map
                         (\option ->
@@ -650,7 +650,13 @@ questionView userCount q =
                                   else
                                     Font.size 20
                                 ]
-                                (PressedNormalisedQuestionAnswer nQuestion.title (userAnswers |> listToggleValue option.emoji))
+                                (if nQuestion.multiselect then
+                                    PressedNormalisedQuestionAnswer nQuestion.title (userAnswers |> listToggleValue option.emoji)
+
+                                 else
+                                    -- Not multiselect, choice replaces answers
+                                    PressedNormalisedQuestionAnswer nQuestion.title [ option.emoji ]
+                                )
                                 (text label)
                         )
                         nQuestion.options
@@ -708,7 +714,7 @@ questionView userCount q =
             in
             column
                 [ spacing 16, centerX, centerY ]
-                [ text attributeQuestion.title
+                [ paragraph [] [ text attributeQuestion.title ]
                 , wrappedRow [ spacing 8, centerX, width fill ]
                     (List.map
                         (\option ->
