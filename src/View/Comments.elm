@@ -17,7 +17,7 @@ adminView comments =
             [ el [] (text <| "Comments: " ++ String.fromInt (List.length comments))
             , Ui.button [ Background.color (rgb 1 0.7 0.7) ] PressedRemoveAllBans (text "Remove bans")
             ]
-        , comments |> List.take 20 |> List.map commentView |> column [ width fill, spacing 8 ]
+        , comments |> List.map commentView |> column [ width fill, spacing 8 ]
         ]
 
 
