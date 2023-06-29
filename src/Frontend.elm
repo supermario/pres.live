@@ -402,7 +402,7 @@ currentPageToQuestion currentQuestion =
 
 view : FrontendModel -> Browser.Document FrontendMsg
 view model =
-    { title = "Hello Lambda Days!"
+    { title = "Hello Elm Camp!"
     , body =
         [ Ui.layout
             (case model of
@@ -497,13 +497,13 @@ adminQuestionView userModel mode currentQuestion adminData =
     case currentQuestion of
         IntroScreen ->
             column [ width fill, height fill, spacing 80 ]
-                [ paragraph [ Font.color Ui.colours.slide.purple, Font.bold, Font.center, Font.size 80, centerY ] [ text "The unbearable weight of glue 🍯" ]
+                [ paragraph [ Font.color Ui.colours.darkGreen, Font.bold, Font.center, Font.size 80, centerY ] [ text Questions.eventTitle ]
                 , column [ centerX ]
-                    [ paragraph [ Font.bold, Font.center, Font.size 60, centerY ] [ text "This talk involves live interaction," ]
+                    [ paragraph [ Font.bold, Font.center, Font.size 60, centerY ] [ text "This session involves live interaction," ]
                     , paragraph [ Font.bold, Font.center, Font.size 60, centerY ] [ text "open URL on a mobile/tablet/laptop:" ]
                     ]
                 , paragraph
-                    [ Font.color Ui.colours.slide.purple, Font.bold, Font.underline, Font.center, Font.size 80, centerY ]
+                    [ Font.color Ui.colours.darkGreen, Font.bold, Font.underline, Font.center, Font.size 80, centerY ]
                     [ text "pres.lamdera.app" ]
                 , row
                     [ centerX ]
@@ -592,6 +592,7 @@ adminQuestionView userModel mode currentQuestion adminData =
                                     , count = count
                                     }
                             , count = count
+                            , label = option.text
                             }
                         )
                         attributeQuestion.options
@@ -657,8 +658,8 @@ questionView userCount q =
             column
                 [ spacing 32, centerX ]
                 [ paragraph
-                    [ Font.size 32, Font.heavy, Font.color (rgb255 102 113 208), Font.center ]
-                    [ text "The unbearable weight of glue" ]
+                    [ Font.size 32, Font.heavy, Font.color Ui.colours.darkGreen, Font.center ]
+                    [ text Questions.eventTitle ]
                 , row
                     [ centerX ]
                     [ el [ Font.size 48, Font.heavy ] (text (String.fromInt userCount ++ " "))
@@ -825,6 +826,7 @@ countryAnswers =
                 else
                     country
             )
+        |> List.sortBy .name
 
 
 experienceLevelAnswers =

@@ -217,7 +217,8 @@ updateFromFrontendWithTime time sessionId clientId msg model =
                                 , howExperiencedAreYouWithProgramming = Dict.empty
                                 , whatCountryAreYouFrom = Dict.empty
                                 , currentQuestion = firstQuestion
-                                , comments = []
+                                , attributeQuestionAnswers = Dict.empty
+                                , normalizedQuestionAnswers = Dict.empty
                             }
                     in
                     ( newModel

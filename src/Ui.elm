@@ -24,6 +24,7 @@ lightMode =
     , orange = fromHex "#FAE6CC"
     , blue = fromHex "#C9DBF8"
     , green = fromHex "#CCE6CC"
+    , darkGreen = fromHex "5cb07e"
     , bg = fromHex "#FFFFFF"
     , bg2 = fromHex "#E9E9E9"
     , fg = fromHex "#333333"

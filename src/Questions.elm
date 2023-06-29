@@ -6,10 +6,15 @@ import Lamdera
 import List.Extra as List
 
 
+eventTitle =
+    "Elm Camp Unkeynote 🏕️"
+
+
 all =
     []
         ++ [ IntroScreen
            , HowAreYou_
+           , WhatCountryAreYouFrom_
            , AttributeQuestion_ AttendanceReason
            , AttributeQuestion_ Profession
            , AttributeQuestion_ Experience
@@ -77,54 +82,92 @@ attributeQuestion attributeType =
 
 openQuestions : List NormalisedQuestion
 openQuestions =
-    [ basicQuestion "Is the added complexity is worth it?"
-    , basicQuestion "The systems I work on are getting more complex."
+    [ --basicQuestion "Is the added complexity is worth it?"
+      basicQuestion "The systems I work on are getting more complex."
     , basicQuestion "I feel well equipped to deal with or reduce complexity."
-    , basicQuestion "Is this a boundary?"
-    , { title = "Someone on our backend team changed a field name in the API.\nWe’ll find out at:"
-      , multiselect = False
-      , hideLabelInButton = True
-      , sortResultsByCount = False
-      , options =
-            [ { comment = True, emoji = "💻", text = "Dev time" }
-            , { comment = True, emoji = "🤖", text = "Build/Test/CI time" }
-            , { comment = True, emoji = "🔥", text = "Run time" }
-            ]
-      }
-    , { title = "A 3rd party changed a field name in their API. \nWe’ll find out at:"
-      , multiselect = False
-      , hideLabelInButton = True
-      , sortResultsByCount = False
-      , options =
-            [ { comment = True, emoji = "💻", text = "Dev time" }
-            , { comment = True, emoji = "🤖", text = "Build/Test/CI time" }
-            , { comment = True, emoji = "🔥", text = "Run time" }
-            ]
-      }
 
+    -- , basicQuestion "Is this a boundary?"
+    -- , { title = "Someone on our backend team changed a field name in the API.\nWe’ll find out at:"
+    --   , multiselect = False
+    --   , hideLabelInButton = True
+    --   , sortResultsByCount = False
+    --   , options =
+    --         [ { comment = True, emoji = "💻", text = "Dev time" }
+    --         , { comment = True, emoji = "🤖", text = "Build/Test/CI time" }
+    --         , { comment = True, emoji = "🔥", text = "Run time" }
+    --         ]
+    --   }
+    -- , { title = "A 3rd party changed a field name in their API. \nWe’ll find out at:"
+    --   , multiselect = False
+    --   , hideLabelInButton = True
+    --   , sortResultsByCount = False
+    --   , options =
+    --         [ { comment = True, emoji = "💻", text = "Dev time" }
+    --         , { comment = True, emoji = "🤖", text = "Build/Test/CI time" }
+    --         , { comment = True, emoji = "🔥", text = "Run time" }
+    --         ]
+    --   }
     -- , basicQuestion "Does your code handle HTTP 418 error codes?"
-    , { title = "What percentage of your code is glue code?"
+    -- , { title = "What percentage of your code is glue code?"
+    --   , multiselect = False
+    --   , hideLabelInButton = False
+    --   , sortResultsByCount = False
+    --   , options =
+    --         [ { comment = True, emoji = "🟢", text = "<10%" }
+    --         , { comment = True, emoji = "🟡", text = "<20%" }
+    --         , { comment = True, emoji = "🟠", text = "<40%" }
+    --         , { comment = True, emoji = "🔴", text = "<80%" }
+    --         , { comment = True, emoji = "🔥", text = "Like, all of it" }
+    --         ]
+    --   }
+    , { title = "The amount of time I spent working on or engaging with the Elm OSS weekly."
       , multiselect = False
       , hideLabelInButton = False
       , sortResultsByCount = False
       , options =
-            [ { comment = True, emoji = "🟢", text = "<10%" }
-            , { comment = True, emoji = "🟡", text = "<20%" }
-            , { comment = True, emoji = "🟠", text = "<40%" }
-            , { comment = True, emoji = "🔴", text = "<80%" }
-            , { comment = True, emoji = "🔥", text = "Like, all of it" }
+            [ { comment = True, emoji = "", text = "n/a" }
+            , { comment = True, emoji = "", text = "0-1h" }
+            , { comment = True, emoji = "", text = "1-2h" }
+            , { comment = True, emoji = "", text = "2-4h" }
+            , { comment = True, emoji = "", text = "4-8h" }
+            , { comment = True, emoji = "", text = "8+" }
             ]
       }
-    , { title = "How was it for you?"
+    , { title = "The amount of time I spent working on or engaging with the Elm community weekly."
       , multiselect = False
-      , hideLabelInButton = True
+      , hideLabelInButton = False
       , sortResultsByCount = False
       , options =
-            [ { comment = True, emoji = "🤩", text = "Great" }
-            , { comment = True, emoji = "🤷🏼\u{200D}♀️", text = "Alright" }
-            , { comment = True, emoji = "🙅🏿", text = "Bad" }
+            [ { comment = True, emoji = "", text = "n/a" }
+            , { comment = True, emoji = "", text = "0-1h" }
+            , { comment = True, emoji = "", text = "1-2h" }
+            , { comment = True, emoji = "", text = "2-4h" }
+            , { comment = True, emoji = "", text = "4-8h" }
+            , { comment = True, emoji = "", text = "8+" }
             ]
       }
+    , { title = "What percentage of your Backend API calls are just Auth + raw CRUD? No business logic or transformations."
+      , multiselect = False
+      , hideLabelInButton = False
+      , sortResultsByCount = False
+      , options =
+            [ { comment = True, emoji = "", text = "0-20%" }
+            , { comment = True, emoji = "", text = "20-40%" }
+            , { comment = True, emoji = "", text = "40-80%" }
+            , { comment = True, emoji = "", text = "80-100%" }
+            ]
+      }
+
+    -- , { title = "How was it for you?"
+    --   , multiselect = False
+    --   , hideLabelInButton = True
+    --   , sortResultsByCount = False
+    --   , options =
+    --         [ { comment = True, emoji = "🤩", text = "Great" }
+    --         , { comment = True, emoji = "🤷🏼\u{200D}♀️", text = "Alright" }
+    --         , { comment = True, emoji = "🙅🏿", text = "Bad" }
+    --         ]
+    --   }
     ]
 
 
@@ -380,7 +423,8 @@ type AttendanceReason
 
 allAttendanceReasons : List AttendanceReason
 allAttendanceReasons =
-    [ Social, Business, BreakFromWork, CuratedDiscovery, YoutubeIsBetterIRL, Love, AttendanceOther ]
+    -- YoutubeIsBetterIRL,
+    [ Social, Business, BreakFromWork, CuratedDiscovery, Love, AttendanceOther ]
 
 
 attendanceReasonToString attendanceReason =
@@ -402,7 +446,7 @@ attendanceReasonToOption attendanceReason =
             { comment = False, emoji = "🌴", text = "Break from work" }
 
         CuratedDiscovery ->
-            { comment = False, emoji = "🔭", text = "Curated Discovery" }
+            { comment = False, emoji = "🔭", text = "Discovery" }
 
         YoutubeIsBetterIRL ->
             { comment = False, emoji = "📺", text = "Youtube is better IRL" }
