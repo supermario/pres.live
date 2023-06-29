@@ -219,6 +219,7 @@ updateFromFrontendWithTime time sessionId clientId msg model =
                                 , currentQuestion = firstQuestion
                                 , attributeQuestionAnswers = Dict.empty
                                 , normalizedQuestionAnswers = Dict.empty
+                                , comments = []
                             }
                     in
                     ( newModel
