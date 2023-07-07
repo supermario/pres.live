@@ -402,7 +402,7 @@ currentPageToQuestion currentQuestion =
 
 view : FrontendModel -> Browser.Document FrontendMsg
 view model =
-    { title = "Hello Elm Camp!"
+    { title = "Hello " ++ Questions.eventTitle ++ "!"
     , body =
         [ Ui.layout
             (case model of

@@ -7,14 +7,58 @@ import List.Extra as List
 
 
 eventTitle =
-    "Elm Camp Unkeynote 🏕️"
+    "Bangkok Functional Meetup"
 
 
 all =
     []
         ++ [ IntroScreen
            , HowAreYou_
-           , WhatCountryAreYouFrom_
+           , NormalisedQuestion_
+                { title = "How are you feeling about Elm so far?"
+                , multiselect = True
+                , hideLabelInButton = False
+                , sortResultsByCount = False
+                , options =
+                    [ { comment = True, emoji = "🤩", text = "Wow" }
+                    , { comment = True, emoji = "😎", text = "Cool" }
+                    , { comment = True, emoji = "🤔", text = "Curious" }
+                    , { comment = True, emoji = "🥵", text = "Confused" }
+                    , { comment = True, emoji = "🙅🏼\u{200D}♀️", text = "Nope" }
+                    ]
+                }
+           , NormalisedQuestion_
+                { title = "How I feel about tech industry complexity"
+                , multiselect = True
+                , hideLabelInButton = False
+                , sortResultsByCount = False
+                , options =
+                    [ { comment = True, emoji = "😎", text = "Its fine" }
+                    , { comment = True, emoji = "🤷🏼\u{200D}♀️", text = "It is what it is" }
+                    , { comment = True, emoji = "😥", text = "I'm struggling" }
+                    , { comment = True, emoji = "🥵", text = "I'm dying" }
+                    , { comment = True, emoji = "💀", text = "I'm dead" }
+                    ]
+                }
+           , NormalisedQuestion_
+                { title = "What hosting services do you use?"
+                , multiselect = True
+                , hideLabelInButton = False
+                , sortResultsByCount = False
+                , options =
+                    [ { comment = True, emoji = "🟠", text = "AWS" }
+                    , { comment = True, emoji = "🟢", text = "Google" }
+                    , { comment = True, emoji = "🔵", text = "Azure" }
+                    , { comment = True, emoji = "🟣", text = "Heroku" }
+                    , { comment = True, emoji = "🟡", text = "Netlify" }
+                    , { comment = True, emoji = "🔴", text = "Vercel" }
+                    , { comment = True, emoji = "🦈", text = "Digital Ocean" }
+                    , { comment = True, emoji = "❓", text = "Other" }
+                    , { comment = True, emoji = "❌", text = "None" }
+                    ]
+                }
+
+           --    , WhatCountryAreYouFrom_
            , AttributeQuestion_ AttendanceReason
            , AttributeQuestion_ Profession
            , AttributeQuestion_ Experience
